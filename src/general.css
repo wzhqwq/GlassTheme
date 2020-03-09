@@ -1,0 +1,21 @@
+.gt-dark {
+  --bgC: #101010;
+  --priC: #262626;
+  --secC: #404040;
+  --priB: #262626A0;
+  --secB: #404040A0;
+  --fullR: #EEEEEE;
+  --halfR: #858585;
+  --green: #480;
+  --blue: #06B;
+  --orange: #C70;
+  --red: #B00;
+  --brown: #720;
+}
+
+.gt-icon-group > .gt-icon {
+  position: absolute;
+}
+.gt-icon, .gt-icon-group {
+  transition: filter .3s;
+}
