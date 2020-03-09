@@ -1,0 +1,158 @@
+var ikIcon = function (img) {
+  var eh = eh + 'When creating icon: ';
+  var icon = document.createElement('div');
+  icon.className = 'gt-icon';
+  var color = typeof arguments[1] == 'string' ? arguments[1] : arguments[2];
+  var pos = typeof arguments[1] == 'object' ? arguments[1] : arguments[2];
+
+  if (img && img instanceof Element) {
+    icon.appendChild(img);
+    if (color) {
+      throw new Error(eh + 'Element with color is not supported.');
+    }
+  }
+  else if (typeof img == 'string') {
+    var url = img;
+    if (color) {
+      if (color[0] == '-') {
+        color = `var(-${color})`;
+      }
+      if (!pos) {
+        throw new Error(eh + 'size & position are needed');
+      }
+      icon.style = `background-color: ${color}; -webkit-mask-image: url(${url}); -webkit-mask-position: -${pos.x}px -${pos.y}px; width: ${pos.w}px; height: ${pos.h}px`;
+    }
+    else {
+      if (typeof pos == 'object') {
+        icon.style = `background-image: url(${url}); background-position: -${pos.x}px -${pos.y}px; width: ${pos.w}px; height: ${pos.y}px`;
+      }
+      else {
+        img = document.createElement('img');
+        img.src = url;
+        icon.appendChild(img);
+      }
+    }
+  }
+  else {
+    throw new Error(eh + "When creating Icon: 'img' must be an element or a url.");
+  }
+
+  constP(this, 'icon', function (size) {
+    var ret = icon.cloneNode(true);
+    if (size) {
+      var wrap = document.createElement('div');
+      wrap.appendChild(ret);
+      wrap.style = `width: ${size.w}px; height: ${size.h}`;
+      if (size.w && size.h) {
+        ret.style.transform = `scaleX(${Number(size.w / pos.w).toFixed(2)}) scaleY(${Number(size.h / pos.h).toFixed(2)})`;
+      } else {
+        ret.style.transform = `scale(${size.w ? Number(size.w / pos.w).toFixed(2) : Number(size.h / pos.h).toFixed(2)})`;
+        if (size.w) {
+          size.h = size.w / w * h;
+        }
+        else {
+          size.w = size.h / h * w;
+        }
+      }
+      if (size.w < pos.w) {
+        ret.style.marginLeft = `-${(pos.w - size.w) / 2}px`;
+      }
+      if (size.h < pos.h) {
+        ret.style.marginTop = `-${(pos.h - size.h) / 2}px`;
+      }
+    }
+    return ret;
+  });
+  constP(this, 'width', pos.w); constP(this, 'height', pos.h);
+};
+
+var ikIconGroup = function (layers) {
+  var eh = eh + 'When creating icon group: ';
+  var icon = document.createElement('div');
+  icon.className = 'gt-icon-group';
+  var w = 0, h = 0;
+
+  if (!layers instanceof Array || !layers.length) {
+    throw new Error(eh + "Illeagal layer array.");
+  }
+  layers.map(function (item) {
+    // {img, color}
+    if (!item instanceof ikIcon) {
+      throw new Error(eh + "Every layer must be an instance of iconKit.Icon");
+    }
+    w = w < item.width ? item.width : w;
+    h = h < item.height ? item.height : h;
+    icon.appendChild(item.icon());
+  });
+  icon.style = `width: ${w}px; height: ${h}px`;
+
+  constP(this, 'icon', function (size) {
+    var ret = icon.cloneNode(true);
+    if (size) {
+      var wrap = document.createElement('div');
+      wrap.appendChild(ret);
+      wrap.style = `width: ${size.w}px; height: ${size.h}`;
+      if (size.w && size.h) {
+        ret.style.transform = `scaleX(${Number(size.w / w).toFixed(2)}) scaleY(${Number(size.h / h).toFixed(2)})`;
+      } else {
+        ret.style.transform = `scale(${size.w ? Number(size.w / w).toFixed(2) : Number(size.h / h).toFixed(2)})`;
+        if (size.w) {
+          size.h = size.w / w * h;
+        }
+        else {
+          size.w = size.h / h * w;
+        }
+      }
+      if (size.w < w) {
+        ret.style.marginLeft = `-${(w - size.w) / 2}px`;
+      }
+      if (size.h < h) {
+        ret.style.marginTop = `-${(h - size.h) / 2}px`;
+      }
+    }
+    return ret;
+  });
+  constP(this, 'width', w);  constP(this, 'height', h);
+};
+
+
+var ikIconMap = function (url, config) {
+  var eh = eh + 'When creating iconMap: ';
+  var icons = [];
+  if (typeof url != 'string') {
+    throw new Error(eh + 'url must be a String');
+  }
+  if (typeof config != 'object') {
+    throw new Error(eh + 'config must be an Object');
+  }
+  checkP(eh, config, ['width', 'height', 'rows']);
+  checkPNumP(eh, config, ['width', 'height']);
+  if (!config.rows instanceof Array || !config.rows.length) {
+    throw new Error(eh + 'Illegal rows array');
+  }
+
+  var w = config.width, h = config.height, r = config.rows;
+  var n = [];
+  r.map(function (col, i) {
+    col.map(function (item, j) {
+      n[item.name] = new ikIcon(url, item.color, {x: j * w, y: i * h, w: w, h: h});
+    });
+  });
+
+  constP(this, 'getIcons', function (name) {
+    var ret = [];
+    if (typeof name == 'string') {
+      name = [name];
+    }
+    name.map(function (item) {
+      ret.push(n[item]);
+    });
+    return ret;
+  });
+};
+
+gt.iconKit = {
+  Icon: ikIcon,
+  IconGroup: ikIconGroup,
+  IconMap: ikIconMap,
+}

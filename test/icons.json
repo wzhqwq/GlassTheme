@@ -1,0 +1,34 @@
+{
+  "width": 40,
+  "height": 40,
+  "rows": [
+    [{"name": "storage", "color": "-fullR"},
+      {"name": "add", "color": "-fullR"},
+      {"name": "import", "color": "-fullR"},
+      {"name": "save", "color": "-fullR"},
+      {"name": "saveAll", "color": "-fullR"},
+      {"name": "undo", "color": "-fullR"},
+      {"name": "redo", "color": "-fullR"},
+      {"name": "run", "color": "-green"},
+      {"name": "runLast", "color": "-green"},
+      {"name": "bfMini", "color": "-blue"},
+      {"name": "debug", "color": "-orange"},
+      {"name": "debugLast", "color": "-orange"},
+      {"name": "eye"},
+      {"name": "test", "color": "-blue"},
+      {"name": "testRun", "color": "-blue"},
+      {"name": "runMini", "color": "-green"},
+      {"name": "testAdd", "color": "-blue"},
+      {"name": "addMini", "color": "-orange"},
+      {"name": "testSt1", "color": "-fullR"},
+      {"name": "testSt2", "color": "-blue"}
+    ],
+    [{"name": "pause", "color": "-orange"},
+      {"name": "play", "color": "-green"},
+      {"name": "stop", "color": "-red"},
+      {"name": "fw", "color": "-fullR"},
+      {"name": "stepEnt", "color": "-fullR"},
+      {"name": "stepEsc", "color": "-fullR"}
+    ]
+  ]
+}
