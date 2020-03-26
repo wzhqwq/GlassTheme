@@ -2,8 +2,9 @@ var ikIcon = function (img) {
   var eh = eh + 'When creating icon: ';
   var icon = document.createElement('div');
   icon.className = 'gt-icon';
-  var color = typeof arguments[1] == 'string' ? arguments[1] : arguments[2];
-  var pos = typeof arguments[1] == 'object' ? arguments[1] : arguments[2];
+  var arg1 = arguments[1], arg2 = arguments[2];
+  var color = typeof arg1 == 'string' ? arg1 : (typeof arg2 == 'string' ? arg2 : null);
+  var pos = typeof arg1 == 'object' ? arg1 : (typeof arg2 == 'object' ? arg2 : null);
 
   if (img && img instanceof Element) {
     icon.appendChild(img);
@@ -20,11 +21,12 @@ var ikIcon = function (img) {
       if (!pos) {
         throw new Error(eh + 'size & position are needed');
       }
-      icon.style = `background-color: ${color}; -webkit-mask-image: url(${url}); -webkit-mask-position: -${pos.x}px -${pos.y}px; width: ${pos.w}px; height: ${pos.h}px`;
+      console.log(111);
+      icon.style = `--cc: ${color}; -webkit-mask-image: url(${url}); -webkit-mask-position: -${pos.x}px -${pos.y}px; width: ${pos.w}px; height: ${pos.h}px`;
     }
     else {
       if (typeof pos == 'object') {
-        icon.style = `background-image: url(${url}); background-position: -${pos.x}px -${pos.y}px; width: ${pos.w}px; height: ${pos.y}px`;
+        icon.style = `background-image: url(${url}); background-position: -${pos.x}px -${pos.y}px; width: ${pos.w}px; height: ${pos.h}px`;
       }
       else {
         img = document.createElement('img');
@@ -34,7 +36,7 @@ var ikIcon = function (img) {
     }
   }
   else {
-    throw new Error(eh + "When creating Icon: 'img' must be an element or a url.");
+    throw new Error(eh + "When creating Icon: 'img' should be an element or a url.");
   }
 
   constP(this, 'icon', function (size) {
@@ -78,7 +80,7 @@ var ikIconGroup = function (layers) {
   layers.map(function (item) {
     // {img, color}
     if (!item instanceof ikIcon) {
-      throw new Error(eh + "Every layer must be an instance of iconKit.Icon");
+      throw new Error(eh + "Every layer should be an instance of iconKit.Icon");
     }
     w = w < item.width ? item.width : w;
     h = h < item.height ? item.height : h;
@@ -120,10 +122,10 @@ var ikIconMap = function (url, config) {
   var eh = eh + 'When creating iconMap: ';
   var icons = [];
   if (typeof url != 'string') {
-    throw new Error(eh + 'url must be a String');
+    throw new Error(eh + 'url should be a String');
   }
   if (typeof config != 'object') {
-    throw new Error(eh + 'config must be an Object');
+    throw new Error(eh + 'config should be an Object');
   }
   checkP(eh, config, ['width', 'height', 'rows']);
   checkPNumP(eh, config, ['width', 'height']);
@@ -139,12 +141,9 @@ var ikIconMap = function (url, config) {
     });
   });
 
-  constP(this, 'getIcons', function (name) {
+  constP(this, 'getIcons', function () {
     var ret = [];
-    if (typeof name == 'string') {
-      name = [name];
-    }
-    name.map(function (item) {
+    [].slice.call(arguments).map(function (item) {
       ret.push(n[item]);
     });
     return ret;

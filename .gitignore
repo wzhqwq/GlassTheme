@@ -2,3 +2,4 @@ index.js
 package.json
 node_modules/
 src/main.js
+.vscode
