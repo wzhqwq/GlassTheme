@@ -1,6 +1,6 @@
 {
-  "width": 40,
-  "height": 40,
+  "width": 30,
+  "height": 30,
   "rows": [
     [{"name": "storage", "color": "-halfR"},
       {"name": "add", "color": "-halfR"},
@@ -10,24 +10,22 @@
       {"name": "undo", "color": "-halfR"},
       {"name": "redo", "color": "-halfR"},
       {"name": "run", "color": "-green"},
-      {"name": "runLast", "color": "-green"},
-      {"name": "bfMini", "color": "-blue"},
       {"name": "debug", "color": "-orange"},
-      {"name": "debugLast", "color": "-orange"},
       {"name": "eye"},
-      {"name": "testRun", "color": "-blue"},
-      {"name": "runMini", "color": "-green"},
-      {"name": "testAdd", "color": "-blue"},
-      {"name": "addMini", "color": "-orange"},
+      {"name": "test", "color": "-blue"},
       {"name": "testSt1", "color": "-halfR"},
-      {"name": "testSt2", "color": "-blue"}
-    ],
-    [{"name": "pause", "color": "-orange"},
+      {"name": "testSt2", "color": "-blue"},
+      {"name": "pause", "color": "-orange"},
       {"name": "play", "color": "-green"},
       {"name": "stop", "color": "-red"},
       {"name": "fw", "color": "-halfR"},
       {"name": "stepEnt", "color": "-halfR"},
       {"name": "stepEsc", "color": "-halfR"}
+    ],
+    [
+      {"name": "bfMini", "color": "-blue", "hasMask": true},
+      {"name": "runMini", "color": "-green", "hasMask": true},
+      {"name": "addMini", "color": "-orange", "hasMask": true}
     ]
   ]
 }

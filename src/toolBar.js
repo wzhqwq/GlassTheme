@@ -174,7 +174,7 @@ var tbkBtnTool = function (icons, name) {
     if (icon.width != icon.height) {
       throw new Error(ehh + 'Every icon should be a square.');
     }
-    els.push(icon.icon(icon.width == 40 ? null : {w: 40}));
+    els.push(icon.icon(icon.width == 30 ? null : {w: 30}));
     el.appendChild(els[i]);
     els[i].style.display = 'none';
   });

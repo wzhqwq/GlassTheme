@@ -5,6 +5,7 @@ var ikIcon = function (img) {
   var arg1 = arguments[1], arg2 = arguments[2];
   var color = typeof arg1 == 'string' ? arg1 : (typeof arg2 == 'string' ? arg2 : null);
   var pos = typeof arg1 == 'object' ? arg1 : (typeof arg2 == 'object' ? arg2 : null);
+  var h, w;
 
   if (img && img instanceof Element) {
     icon.appendChild(img);
@@ -21,17 +22,22 @@ var ikIcon = function (img) {
       if (!pos) {
         throw new Error(eh + 'size & position are needed');
       }
-      console.log(111);
+      w = pos.w; h = pos.h;
       icon.style = `--cc: ${color}; -webkit-mask-image: url(${url}); -webkit-mask-position: -${pos.x}px -${pos.y}px; width: ${pos.w}px; height: ${pos.h}px`;
     }
     else {
       if (typeof pos == 'object') {
         icon.style = `background-image: url(${url}); background-position: -${pos.x}px -${pos.y}px; width: ${pos.w}px; height: ${pos.h}px`;
+        w = pos.w; h = pos.h;
       }
       else {
         img = document.createElement('img');
-        img.src = url;
+        img.onload = function () {
+          w = parseInt(img.width);
+          h = parseInt(img.height);
+        }
         icon.appendChild(img);
+        img.src = url;
       }
     }
   }
@@ -71,7 +77,6 @@ var ikIcon = function (img) {
 var ikIconGroup = function (layers) {
   var eh = eh + 'When creating icon group: ';
   var icon = document.createElement('div');
-  icon.className = 'gt-icon-group';
   var w = 0, h = 0;
 
   if (!layers instanceof Array || !layers.length) {
@@ -84,8 +89,17 @@ var ikIconGroup = function (layers) {
     }
     w = w < item.width ? item.width : w;
     h = h < item.height ? item.height : h;
+    if (item.mask) {
+      console.log(222);
+      var iconn = document.createElement("div");
+      icon.style = `-webkit-mask-image: url(${item.mask.url}); -webkit-mask-position: -${item.mask.x}px -${item.mask.y}px; width: ${item.mask.w}px; height: ${item.mask.h}px`
+      icon.className = 'gt-icon'
+      iconn.appendChild(icon);
+      icon = iconn;
+    }
     icon.appendChild(item.icon());
   });
+  icon.className = 'gt-icon-group';
   icon.style = `width: ${w}px; height: ${h}px`;
 
   constP(this, 'icon', function (size) {
@@ -136,8 +150,14 @@ var ikIconMap = function (url, config) {
   var w = config.width, h = config.height, r = config.rows;
   var n = [];
   r.map(function (col, i) {
-    col.map(function (item, j) {
-      n[item.name] = new ikIcon(url, item.color, {x: j * w, y: i * h, w: w, h: h});
+    var p = 0;
+    col.map(function (item) {
+      n[item.name] = new ikIcon(url, item.color, {x: p, y: i * h, w: w, h: h});
+      p += w;
+      if (item.hasMask) {
+        n[item.name].mask = {url: url, x: p, y: i * h, w: w, h: h};
+        p += w;
+      }
     });
   });
 

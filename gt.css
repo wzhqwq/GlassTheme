@@ -41,9 +41,6 @@
   height: 30px;
   padding: 5px;
 }
-.gt-tool-btn > div {
-  zoom: .75;
-}
 
 .gt-tool-group {
   width: 40px;
@@ -111,9 +108,6 @@
 }
 .gt-tool-title {
   position: absolute;
-}
-.gt-tool-title > div {
-  zoom: 1;
 }
 
 .gt-toolbar-view {
