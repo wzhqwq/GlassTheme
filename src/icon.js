@@ -90,7 +90,6 @@ var ikIconGroup = function (layers) {
     w = w < item.width ? item.width : w;
     h = h < item.height ? item.height : h;
     if (item.mask) {
-      console.log(222);
       var iconn = document.createElement("div");
       icon.style = `-webkit-mask-image: url(${item.mask.url}); -webkit-mask-position: -${item.mask.x}px -${item.mask.y}px; width: ${item.mask.w}px; height: ${item.mask.h}px`
       icon.className = 'gt-icon'

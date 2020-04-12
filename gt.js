@@ -7,6 +7,9 @@
 var gt = {};
 // basic utilities
 const eh = "Glass Theme: ";
+function d(msg) {
+  console.log(msg);
+}
 function constP(obj, name, value) {
   Object.defineProperty(obj, name, {
     value: value,
@@ -39,69 +42,79 @@ function checkPNumP(eh, obj, arr) {
     if (typeof element != 'object' || typeof from != 'object' || typeof to != 'object' || typeof duration != 'number')
       throw new Error(eh + 'invalid args.');
 
-    var d = {}, postfix = {};
-    var a = {}, b = {};
-    var fns = []; 
-    const step = Math.ceil(duration / 40);
-    var process, last;
+    this.d = {}; this.postfix = {};
+    this.a = {}; this.b = {};
+    this.step = Math.ceil(duration / 40);
+    this.from = from; this.to = to; this.element = element;
+    this.timer = 0; this.progress = 0; this.last = {};
+    this.static = true;
+    this.callBk = null;
     for (var i in from) {
       if (typeof i != 'string' || typeof from[i] != 'string' || typeof to[i] != 'string')
         throw new Error(eh + 'every property or value should be a string');
-      var m = from[i].match(/[a-z]+/);
-      postfix[i] = m ? m[0] : '';
-      d[i] = ((b[i] = parseInt(to[i])) - (a[i] = parseInt(from[i]))) / step;
+      var m = from[i].match(/[a-z]+/) || to[i].match(/[a-z]+/);
+      this.postfix[i] = m ? m[0] : '';
+      this.d[i] = ((this.b[i] = parseInt(to[i])) - (this.a[i] = parseInt(from[i]))) / this.step;
+      if (this.d[i])
+        this.static = false;
     }
-    var f1 = function () {
-      if (process == 0) {
+  }
+  function f1(obj) {
+    with (obj) {
+      if (progress == 0) {
         for (var i in last)
           element.style[i] = from[i];
-        fns.map(fn => fn());
         timer = 0;
+        if (callBk) callBk.call(element);
         return;
       }
       for (var i in last)
-        element.style[i] = String(last[i] -= d[i]) + postfix[i];
-      process--;
-      timer = setTimeout(f1, 40);
-    };
-    var f2 = function () {
-      if (process == step) {
+        element.style[i] = String((last[i] -= d[i]).toFixed(3)) + postfix[i];
+      progress--;
+      timer = setTimeout(f1, 40, obj);
+    }
+  };
+  function f2(obj) {
+    with (obj) {
+      if (progress == step) {
         for (var i in last)
           element.style[i] = to[i];
-        fns.map(fn => fn());
         timer = 0;
+        if (callBk) callBk.call(element);
         return;
       }
       for (var i in last)
         element.style[i] = String((last[i] += d[i]).toFixed(3)) + postfix[i];
-      process++;
-      timer = setTimeout(f2, 40);
-    };
-    
-    constP(this, 'start', function (rev) {
+      progress++;
+      timer = setTimeout(f2, 40, obj);
+    }
+  };
+  constP(gt.aniCtrlr.prototype, 'start', function (rev) {
+    if (this.static) return;
+    with (this) {
       if (timer)
         clearTimeout(timer);
       else {
-        last = rev ? new Object(b) : new Object(a);
-        process = rev ? step : 0;
+        last = rev ? Object.assign({}, b) : Object.assign({}, a);
+        progress = rev ? step : 0;
       }
       if (rev)
-        timer = setTimeout(f1, 40);
+        timer = setTimeout(f1, 0, this);
       else
-        timer = setTimeout(f2, 40);
-    });
-    constP(this, 'abort', function (back) {
-      clearTimeout(timer);
-      timer = 0;
-      var t = back ? from : to;
-      for (var i in t)
-        element.style[i] = t[i];
-    });
-    constP(this, 'then', function (fn) {
-      fns.push(fn);
-      return this;
-    })
-  }
+        timer = setTimeout(f2, 0, this);
+      callBk = null;
+      return { then: function (fn) {
+        callBk = fn;
+      } };
+    }
+  });
+  constP(gt.aniCtrlr.prototype, 'abort', function (back) {
+    clearTimeout(this.timer);
+    this.timer = 0;
+    var t = back ? this.from : this.to;
+    for (var i in t)
+      this.element.style[i] = this.t[i];
+  });
 })(gt, eh);
 
 var ikIcon = function (img) {
@@ -196,7 +209,6 @@ var ikIconGroup = function (layers) {
     w = w < item.width ? item.width : w;
     h = h < item.height ? item.height : h;
     if (item.mask) {
-      console.log(222);
       var iconn = document.createElement("div");
       icon.style = `-webkit-mask-image: url(${item.mask.url}); -webkit-mask-position: -${item.mask.x}px -${item.mask.y}px; width: ${item.mask.w}px; height: ${item.mask.h}px`
       icon.className = 'gt-icon'
@@ -292,27 +304,27 @@ var tbkBar = function () {
   var els = [];
   var views = [].slice.apply(arguments);
   var thisObj = this;
-  var ani1 = [];
-  console.log(views);
   views.map(function (view, i) {
     if (!view instanceof tbkView) {
       throw new Error(ehh + 'Every view should be an instance of gt.toolbarKit.View');
     }
     view.barObj = thisObj;
     els.push(view.bind(outer));
-    ani1.push(new gt.aniCtrlr(els[i], {opacity: '0', marginLeft: `${i * 40}px`}, {opacity: '1', marginLeft: `0`}, 200));
     bar.appendChild(els[i]);
     els[i].style.display = 'none';
+    views[i].aniIn = new gt.aniCtrlr(els[i], {opacity: '0', marginLeft: '20px'}, {opacity: '1', marginLeft: '0'}, 200);
+    views[i].aniOut = new gt.aniCtrlr(els[i], {opacity: '1', marginLeft: '0'}, {opacity: '0', marginLeft: '-20px'}, 200);
   });
   els[0].style.display = 'block';
   
   outer.appendChild(bar);
   outer.style.width = bar.style.width = els[0].style.width;
   var stack = [];
-  var title_el = [], ani2 = [];
+  var title_el = [], ani1 = [], ani2 = [];
   stack.push(0);
+  var exitHdl, offset = 0;
   
-  constP(this, 'enter', function enter (id) {
+  constP(this, 'enter', function (id) {
     var eh = eh + 'When entering into another view: ';
     if (typeof id != 'number' || id <= 0 || id >= views.length) {
       throw new Error(eh + 'Illegal id');
@@ -321,13 +333,14 @@ var tbkBar = function () {
       views[id].onenter(this);
     }
     var title = arguments[1];
+    var last = stack[stack.length - 1];
     if (title) {
       var tool;
+      offset = 40;
       if (stack.length != 1) {
         throw new Error(eh + 'You can only create title from main view');
       }
       if (typeof title != 'string' || !(tool = views[0].tools['t' + title])) {
-        console.log(views[0].tools);
         throw new Error(eh + 'Illegal tool name');
       }
       if (!tool instanceof tbkBtnTool) {
@@ -338,21 +351,58 @@ var tbkBar = function () {
         t.appendChild(tool.currentIcon.cloneNode(true));
         t.className = 'gt-tool-title';
         t.style.backgroundColor = tool.color;
+        var exit = this.exit;
+        t.addEventListener("click", function () {
+          exit();
+        })
         outer.appendChild(t);
         title_el[title] = t;
-        ani2[title] = new gt.aniCtrlr(t, {opacity: '0', marginLeft: `${tool.position * 40 - 5}px`}, {opacity: '1', marginLeft: `0`}, 200);
+        ani1[title] = new gt.aniCtrlr(els[0], {opacity: '1', marginLeft: '0'}, {opacity: '0', marginLeft: `-${tool.position * 40}px`}, 200);
+        ani2[title] = new gt.aniCtrlr(t, {opacity: '0', marginLeft: `${tool.position * 40 + 5}px`}, {opacity: '1', marginLeft: '5px'}, 200);
       }
       title_el[title].style.display = 'block';
       els[id].style.display = 'block';
-      ani1[id].start();
-      ani1[stack[stack.length - 1]].start(true);
-      if (title)
-        ani2[title].start();
-      bar.style.width = outer.style.width = els[id].style.width;
-      stack.push(id);
+      
+      var viewAni = new gt.aniCtrlr(els[id], {opacity: '0', marginLeft: `${tool.position * 40 + 40}px`}, {opacity: '1', marginLeft: `40px`}, 200);
+      viewAni.start();
+      ani1[title].start().then(function () {
+        this.style.display = "none";
+      });
+      ani2[title].start();
+      exitHdl = function () {
+        els[0].style.display = "block";
+        viewAni.start(true).then(function () {
+          this.style.display = "none";
+        });
+        ani1[title].start(true);
+        ani2[title].start(true).then(function () {
+          this.style.display = "none";
+        });
+        offset = 0;
+        stack.pop();
+      }
     }
+    else {
+      views[id].aniIn.start();
+      views[last].aniOut.start();
+      if (stack.length == 1) exitHdl = null;
+    }
+    bar.style.width = outer.style.width = `${parseInt(els[id].style.width) + offset}px`;
+    stack.push(id);
   });
   constP(this, 'exit', function () {
+    if (stack.length == 1) return;
+    if (stack.length == 2 && exitHdl)
+      exitHdl();
+    else {
+      views[stack.pop()].aniIn.start(true).then(function () {
+        this.style.display = "none";
+      });
+      var now = stack[stack.length - 1];
+      els[now].style.display = "block";
+      views[now].aniOut.start(true);
+    }
+    bar.style.width = outer.style.width = `${parseInt(els[stack[stack.length - 1]].style.width) + offset}px`;
   })
   
   constP(this, 'bar', outer);

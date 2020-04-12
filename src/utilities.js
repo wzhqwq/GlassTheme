@@ -1,5 +1,8 @@
 // basic utilities
 const eh = "Glass Theme: ";
+function d(msg) {
+  console.log(msg);
+}
 function constP(obj, name, value) {
   Object.defineProperty(obj, name, {
     value: value,
@@ -32,67 +35,77 @@ function checkPNumP(eh, obj, arr) {
     if (typeof element != 'object' || typeof from != 'object' || typeof to != 'object' || typeof duration != 'number')
       throw new Error(eh + 'invalid args.');
 
-    var d = {}, postfix = {};
-    var a = {}, b = {};
-    var fns = []; 
-    const step = Math.ceil(duration / 40);
-    var process, last;
+    this.d = {}; this.postfix = {};
+    this.a = {}; this.b = {};
+    this.step = Math.ceil(duration / 40);
+    this.from = from; this.to = to; this.element = element;
+    this.timer = 0; this.progress = 0; this.last = {};
+    this.static = true;
+    this.callBk = null;
     for (var i in from) {
       if (typeof i != 'string' || typeof from[i] != 'string' || typeof to[i] != 'string')
         throw new Error(eh + 'every property or value should be a string');
-      var m = from[i].match(/[a-z]+/);
-      postfix[i] = m ? m[0] : '';
-      d[i] = ((b[i] = parseInt(to[i])) - (a[i] = parseInt(from[i]))) / step;
+      var m = from[i].match(/[a-z]+/) || to[i].match(/[a-z]+/);
+      this.postfix[i] = m ? m[0] : '';
+      this.d[i] = ((this.b[i] = parseInt(to[i])) - (this.a[i] = parseInt(from[i]))) / this.step;
+      if (this.d[i])
+        this.static = false;
     }
-    var f1 = function () {
-      if (process == 0) {
+  }
+  function f1(obj) {
+    with (obj) {
+      if (progress == 0) {
         for (var i in last)
           element.style[i] = from[i];
-        fns.map(fn => fn());
         timer = 0;
+        if (callBk) callBk.call(element);
         return;
       }
       for (var i in last)
-        element.style[i] = String(last[i] -= d[i]) + postfix[i];
-      process--;
-      timer = setTimeout(f1, 40);
-    };
-    var f2 = function () {
-      if (process == step) {
+        element.style[i] = String((last[i] -= d[i]).toFixed(3)) + postfix[i];
+      progress--;
+      timer = setTimeout(f1, 40, obj);
+    }
+  };
+  function f2(obj) {
+    with (obj) {
+      if (progress == step) {
         for (var i in last)
           element.style[i] = to[i];
-        fns.map(fn => fn());
         timer = 0;
+        if (callBk) callBk.call(element);
         return;
       }
       for (var i in last)
         element.style[i] = String((last[i] += d[i]).toFixed(3)) + postfix[i];
-      process++;
-      timer = setTimeout(f2, 40);
-    };
-    
-    constP(this, 'start', function (rev) {
+      progress++;
+      timer = setTimeout(f2, 40, obj);
+    }
+  };
+  constP(gt.aniCtrlr.prototype, 'start', function (rev) {
+    if (this.static) return;
+    with (this) {
       if (timer)
         clearTimeout(timer);
       else {
-        last = rev ? new Object(b) : new Object(a);
-        process = rev ? step : 0;
+        last = rev ? Object.assign({}, b) : Object.assign({}, a);
+        progress = rev ? step : 0;
       }
       if (rev)
-        timer = setTimeout(f1, 40);
+        timer = setTimeout(f1, 0, this);
       else
-        timer = setTimeout(f2, 40);
-    });
-    constP(this, 'abort', function (back) {
-      clearTimeout(timer);
-      timer = 0;
-      var t = back ? from : to;
-      for (var i in t)
-        element.style[i] = t[i];
-    });
-    constP(this, 'then', function (fn) {
-      fns.push(fn);
-      return this;
-    })
-  }
+        timer = setTimeout(f2, 0, this);
+      callBk = null;
+      return { then: function (fn) {
+        callBk = fn;
+      } };
+    }
+  });
+  constP(gt.aniCtrlr.prototype, 'abort', function (back) {
+    clearTimeout(this.timer);
+    this.timer = 0;
+    var t = back ? this.from : this.to;
+    for (var i in t)
+      this.element.style[i] = this.t[i];
+  });
 })(gt, eh);

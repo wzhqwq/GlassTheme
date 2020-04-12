@@ -108,6 +108,8 @@
 }
 .gt-tool-title {
   position: absolute;
+  margin-top: 5px;
+  border-radius: 10px;
 }
 
 .gt-toolbar-view {

@@ -9,27 +9,27 @@ var tbkBar = function () {
   var els = [];
   var views = [].slice.apply(arguments);
   var thisObj = this;
-  var ani1 = [];
-  console.log(views);
   views.map(function (view, i) {
     if (!view instanceof tbkView) {
       throw new Error(ehh + 'Every view should be an instance of gt.toolbarKit.View');
     }
     view.barObj = thisObj;
     els.push(view.bind(outer));
-    ani1.push(new gt.aniCtrlr(els[i], {opacity: '0', marginLeft: `${i * 40}px`}, {opacity: '1', marginLeft: `0`}, 200));
     bar.appendChild(els[i]);
     els[i].style.display = 'none';
+    views[i].aniIn = new gt.aniCtrlr(els[i], {opacity: '0', marginLeft: '20px'}, {opacity: '1', marginLeft: '0'}, 200);
+    views[i].aniOut = new gt.aniCtrlr(els[i], {opacity: '1', marginLeft: '0'}, {opacity: '0', marginLeft: '-20px'}, 200);
   });
   els[0].style.display = 'block';
   
   outer.appendChild(bar);
   outer.style.width = bar.style.width = els[0].style.width;
   var stack = [];
-  var title_el = [], ani2 = [];
+  var title_el = [], ani1 = [], ani2 = [];
   stack.push(0);
+  var exitHdl, offset = 0;
   
-  constP(this, 'enter', function enter (id) {
+  constP(this, 'enter', function (id) {
     var eh = eh + 'When entering into another view: ';
     if (typeof id != 'number' || id <= 0 || id >= views.length) {
       throw new Error(eh + 'Illegal id');
@@ -38,13 +38,14 @@ var tbkBar = function () {
       views[id].onenter(this);
     }
     var title = arguments[1];
+    var last = stack[stack.length - 1];
     if (title) {
       var tool;
+      offset = 40;
       if (stack.length != 1) {
         throw new Error(eh + 'You can only create title from main view');
       }
       if (typeof title != 'string' || !(tool = views[0].tools['t' + title])) {
-        console.log(views[0].tools);
         throw new Error(eh + 'Illegal tool name');
       }
       if (!tool instanceof tbkBtnTool) {
@@ -55,21 +56,58 @@ var tbkBar = function () {
         t.appendChild(tool.currentIcon.cloneNode(true));
         t.className = 'gt-tool-title';
         t.style.backgroundColor = tool.color;
+        var exit = this.exit;
+        t.addEventListener("click", function () {
+          exit();
+        })
         outer.appendChild(t);
         title_el[title] = t;
-        ani2[title] = new gt.aniCtrlr(t, {opacity: '0', marginLeft: `${tool.position * 40 - 5}px`}, {opacity: '1', marginLeft: `0`}, 200);
+        ani1[title] = new gt.aniCtrlr(els[0], {opacity: '1', marginLeft: '0'}, {opacity: '0', marginLeft: `-${tool.position * 40}px`}, 200);
+        ani2[title] = new gt.aniCtrlr(t, {opacity: '0', marginLeft: `${tool.position * 40 + 5}px`}, {opacity: '1', marginLeft: '5px'}, 200);
       }
       title_el[title].style.display = 'block';
       els[id].style.display = 'block';
-      ani1[id].start();
-      ani1[stack[stack.length - 1]].start(true);
-      if (title)
-        ani2[title].start();
-      bar.style.width = outer.style.width = els[id].style.width;
-      stack.push(id);
+      
+      var viewAni = new gt.aniCtrlr(els[id], {opacity: '0', marginLeft: `${tool.position * 40 + 40}px`}, {opacity: '1', marginLeft: `40px`}, 200);
+      viewAni.start();
+      ani1[title].start().then(function () {
+        this.style.display = "none";
+      });
+      ani2[title].start();
+      exitHdl = function () {
+        els[0].style.display = "block";
+        viewAni.start(true).then(function () {
+          this.style.display = "none";
+        });
+        ani1[title].start(true);
+        ani2[title].start(true).then(function () {
+          this.style.display = "none";
+        });
+        offset = 0;
+        stack.pop();
+      }
     }
+    else {
+      views[id].aniIn.start();
+      views[last].aniOut.start();
+      if (stack.length == 1) exitHdl = null;
+    }
+    bar.style.width = outer.style.width = `${parseInt(els[id].style.width) + offset}px`;
+    stack.push(id);
   });
   constP(this, 'exit', function () {
+    if (stack.length == 1) return;
+    if (stack.length == 2 && exitHdl)
+      exitHdl();
+    else {
+      views[stack.pop()].aniIn.start(true).then(function () {
+        this.style.display = "none";
+      });
+      var now = stack[stack.length - 1];
+      els[now].style.display = "block";
+      views[now].aniOut.start(true);
+    }
+    bar.style.width = outer.style.width = `${parseInt(els[stack[stack.length - 1]].style.width) + offset}px`;
   })
   
   constP(this, 'bar', outer);
