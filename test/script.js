@@ -33,9 +33,17 @@ $(function () {
       console.log(e);
     }
     //tool.setIcon(1);
-    var fish = new gt.iconKit.IconAnimation('fisg.png', 50, 50, 30, 0.6);
+    var fish = new gt.iconKit.IconAnimation('fish.png', 50, 50, 30, 0.6, '-fullR');
     fish.icon.addEventListener('click', function () {
-      fish.playTo(15);
-    })
+      if (fish.current == 0) {
+        fish.playTo(13).then(function () {
+          $('.main').toggleClass('gt-light').toggleClass('gt-dark');
+          setTimeout(() => {
+            fish.playTo(0);
+          }, 1000);
+        })
+      }
+    });
+    $('.main').append(fish.icon);
   });
 });

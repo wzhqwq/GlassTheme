@@ -246,7 +246,7 @@ var ikIconGroup = function (layers) {
     }
     return ret;
   });
-  constP(this, 'width', w);  constP(this, 'height', h);
+  constP(this, 'width', w); constP(this, 'height', h);
 };
 
 
@@ -270,10 +270,10 @@ var ikIconMap = function (url, config) {
   r.map(function (col, i) {
     var p = 0;
     col.map(function (item) {
-      n[item.name] = new ikIcon(url, item.color, {x: p, y: i * h, w: w, h: h});
+      n[item.name] = new ikIcon(url, item.color, { x: p, y: i * h, w: w, h: h });
       p += w;
       if (item.hasMask) {
-        n[item.name].mask = {url: url, x: p, y: i * h, w: w, h: h};
+        n[item.name].mask = { url: url, x: p, y: i * h, w: w, h: h };
         p += w;
       }
     });
@@ -288,23 +288,45 @@ var ikIconMap = function (url, config) {
   });
 };
 
-function ikIconAnim(src, width, height, frames, duration) {
-  var icon = document.createElement('div');
-  icon.style = `background-image: url('${src}'); width: ${width}px; height: ${height}px; transition: background-position ${duration.toFixed(3)} steps(${frames})`;
-  this.icon = icon;
-  var current = 0;
-  
-  constP(this, 'play', function (infinite) {
-    if (infinite === undefined)
-      infinite = true;  // default value
-    icon.style.backgroundPosition
-  });
-  constP(this, 'playTo', function (frameId) {
+function ikIconAnim(src, width, height, frames, duration, color) {
+  this.icon = document.createElement('div');
+  this.prefix = (color ? 'webkitMask' : 'background') + 'Position';
+  this.width = width;
+  this.step = Math.floor(1000 * duration / frames);
+  this.current = 0;
+  this.frames = frames;
+
+  if (color && color[0] == '-') color = `var(-${color})`;
+  this.icon.style = (color ? `background-color: ${color}; -webkit-mask` : `background`) + `-image: url(${src}); width: ${width}px; height: ${height}px;`;
+
+}
+constP(ikIconAnim.prototype, 'play', function (infinite) {
+  if (infinite === undefined)
+    infinite = true;  // default value
+  this.icon.style.backgroundPosition
+});
+constP(ikIconAnim.prototype, 'playTo', function (frameId) {
+  with (this) {
     if (typeof frameId != 'number' || frameId < 0 || frameId >= frames)
       throw new Error('In playTo: illegal frame id.');
-    icon.style.backgroundPosition = `0 ${frameId * width}px`;
-  });
-}
+    var thenF = () => {};
+    var f = function (i) {
+      icon.style[prefix] = `-${(++i) * width}px`;
+      if (i >= frames) i = 0;
+      if (i == frameId)
+        thenF();
+      else
+        setTimeout(f, step, i);
+    };
+    setTimeout(f, step, current);
+    current = frameId;
+    return {
+      then: function (f) {
+        thenF = f;
+      }
+    };
+  }
+});
 
 gt.iconKit = {
   Icon: ikIcon,

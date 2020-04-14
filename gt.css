@@ -4,25 +4,25 @@
   --secC: #444;
   --priB: #333A;
   --secB: #444A;
-  --fullR: #EEE;
+  --fullR: #DDD;
   --halfR: #AAA;
-  --green: #5A0;
-  --blue: #06B;
-  --orange: #C70;
+  --green: #0C3;
+  --blue: #08F;
+  --orange: #F90;
   --red: #D00;
   --brown: #720;
 }
 .gt-light {
-  --bgC: #EEE;
-  --priC: #DDD;
-  --secC: #CCC;
-  --priB: #DDDA;
-  --secB: #CCCA;
-  --fullR: #111;
-  --halfR: #555;
-  --green: #3C0;
-  --blue: #19F;
-  --orange: #F70;
+  --bgC: #FAFAFA;
+  --priC: #EEE;
+  --secC: #DDD;
+  --priB: #EEEA;
+  --secB: #DDDA;
+  --fullR: #333;
+  --halfR: #666;
+  --green: #2A0;
+  --blue: #06F;
+  --orange: #E60;
   --red: #F22;
   --brown: #910;
 }
@@ -37,7 +37,6 @@
   transition: filter .3s;
 }
 
-@keyframes 
 .gt-tool-btn {
   width: 30px;
   height: 30px;
