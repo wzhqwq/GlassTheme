@@ -33,5 +33,9 @@ $(function () {
       console.log(e);
     }
     //tool.setIcon(1);
+    var fish = new gt.iconKit.IconAnimation('fisg.png', 50, 50, 30, 0.6);
+    fish.icon.addEventListener('click', function () {
+      fish.playTo(15);
+    })
   });
 });

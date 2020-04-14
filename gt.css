@@ -36,6 +36,8 @@
 .gt-icon, .gt-icon-group {
   transition: filter .3s;
 }
+
+@keyframes 
 .gt-tool-btn {
   width: 30px;
   height: 30px;

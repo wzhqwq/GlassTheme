@@ -288,10 +288,29 @@ var ikIconMap = function (url, config) {
   });
 };
 
+function ikIconAnim(src, width, height, frames, duration) {
+  var icon = document.createElement('div');
+  icon.style = `background-image: url('${src}'); width: ${width}px; height: ${height}px; transition: background-position ${duration.toFixed(3)} steps(${frames})`;
+  this.icon = icon;
+  var current = 0;
+  
+  constP(this, 'play', function (infinite) {
+    if (infinite === undefined)
+      infinite = true;  // default value
+    icon.style.backgroundPosition
+  });
+  constP(this, 'playTo', function (frameId) {
+    if (typeof frameId != 'number' || frameId < 0 || frameId >= frames)
+      throw new Error('In playTo: illegal frame id.');
+    icon.style.backgroundPosition = `0 ${frameId * width}px`;
+  });
+}
+
 gt.iconKit = {
   Icon: ikIcon,
   IconGroup: ikIconGroup,
   IconMap: ikIconMap,
+  IconAnimation: ikIconAnim
 }
 var tbkBar = function () {
   var ehh = eh + 'When creating tool bar: ';
