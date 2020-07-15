@@ -3,12 +3,6 @@ const eh = "Glass Theme: ";
 function d(msg) {
   console.log(msg);
 }
-function constP(obj, name, value) {
-  Object.defineProperty(obj, name, {
-    value: value,
-    configurable: false
-  });
-}
 function checkP(eh, obj, arr) {
   arr.map(function (item) {
     if (!obj[item]) {
@@ -26,7 +20,7 @@ function checkPNumP(eh, obj, arr) {
 
 // animation utilities, public
 // 已知动画：工具栏移动色块动画、view切换动画(双对象)、工具切换图标(单次动画)
-((gt, eh) => {
+/* ((gt, eh) => {
   // animation controller class with separated timer
   // duration(ms)
   gt.aniCtrlr = function (element, from, to, duration) {
@@ -108,4 +102,4 @@ function checkPNumP(eh, obj, arr) {
     for (var i in t)
       this.element.style[i] = this.t[i];
   });
-})(gt, eh);
+})(gt, eh); */

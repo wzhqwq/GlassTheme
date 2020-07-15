@@ -17,7 +17,7 @@
       {"name": "testSt2", "color": "-blue"},
       {"name": "search", "color": "-fullR"},
       {"name": "tMachine", "color": "-fullR"},
-      {"name": "blank", "color": "-fullR"},
+      {"name": "problem", "color": "-fullR"},
       {"name": "send", "color": "-blue"},
       {"name": "pause", "color": "-orange"},
       {"name": "play", "color": "-green"},
@@ -27,9 +27,12 @@
       {"name": "stepEsc", "color": "-fullR"}
     ],
     [
-      {"name": "bfMini", "color": "-blue", "hasMask": true},
-      {"name": "runMini", "color": "-green", "hasMask": true},
-      {"name": "addMini", "color": "-orange", "hasMask": true}
+      {"name": "bwMini", "color": "-blue"},
+      {"name": "runMini", "color": "-green"},
+      {"name": "addMini", "color": "-orange"}
     ]
+  ],
+  "masks": [
+    ["bwMini", "runMini", "addMini"]
   ]
 }

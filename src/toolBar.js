@@ -48,7 +48,7 @@ var tbkBar = function () {
       if (typeof title != 'string' || !(tool = views[0].tools['t' + title])) {
         throw new Error(eh + 'Illegal tool name');
       }
-      if (!tool instanceof tbkBtnTool) {
+      if (!tool instanceof tbkTool) {
         throw new Error(eh + 'only button-like tool can be used as title');
       }
       if (!title_el[title]) {
@@ -115,137 +115,102 @@ var tbkBar = function () {
 
 // View类通用，包含视图切换函数，可以作为唯一的主视图与Bar实例绑定
 // 自定义：onopen onclose
-var tbkView = function () {
-  var ehh = eh + 'When creating tool view: ';
+class tbkView {
+  tools = {};
+  #count = 0;
+  #width = 0;
+  #view = document.createElement("div");
+  #hover = document.createElement("div");
+  #name;
+  get count() { return this.#count; };
+  get width() { return this.#width; };
+  get name() { return this.#name; };
+  get view() { return this.#view; };
 
-  var view = document.createElement('div');
-  var hover = document.createElement('div');
-  view.className = 'gt-toolbar-view';
-  hover.className = 'gt-toolbar-hover';
-  view.appendChild(hover);
-  var tools = [].slice.apply(arguments);
-  var tools_wait = [];
-  var els = [];
-  var width = 0;
-  var thisObj = this;
-  tools.map(function (tool, i) {
-    if (tool instanceof tbkGroup) {
-      tools_wait.push(tool.barReady);
-      tool.tools.map(function (tool) {
-        els['t' + tool.name] = tool.tool;
-        tools['t' + tool.name] = tool;
-      })
-    }
-    else if (tool instanceof tbkBtnTool) {
-      els['t' + tool.name] = els[i] = tool.tool;
-      tools['t' + tool.name] = tool;
-    } else {
-      throw new Error(ehh + 'Every tool should be an instance of Tool');
-    }
-
-    tool.viewObj = thisObj;
-    tool.position = i;
-    view.appendChild(tool.tool);
-    
-    var ml = width + 2;
-    width += tool.width;
-    
-    tool.tool.addEventListener('mouseenter', function () {
-      hover.style.width = `${tool.width - 4}px`;
-      hover.style.marginLeft = `${ml}px`;
-      hover.style.filter = 'opacity(.1)';
+  constructor(name) {
+    var view = this.#view, hover = this.#hover, tools = this.tools;
+    view.className = 'gt-toolbar-view';
+    hover.className = 'gt-toolbar-hover';
+    view.appendChild(hover);
+    view.addEventListener('mouseover', function (e) {
+      hover.style.filter = 'opacity(.2)';
+      var t = tools[e.target.id];
+      if (!t) return;
+      hover.style.marginLeft = `${t.l + 2}px`;
+      hover.style.width = `${t.tool.width - 4}px`;
     });
-  });
-  view.style.width = `${width}px`;
+    view.addEventListener('mouseleave', function (e) {
+      if (e.target == view)
+        hover.style.filter = 'opacity(0)';
+    });
+    view.addEventListener('click', function (e) {
+      var t = tools[e.target.id];
+      if (t && t.click) t.click();
+    })
+
+    this.#name = name;
+  }
+
+  append(toolObj, click) {
+    if (this.tools[toolObj.name]) throw new Error(eh + 'tool name repeat: ' + toolObj.name);
+    this.#view.appendChild(toolObj.tool);
+    this.tools['tool-' + toolObj.name] = {tool : toolObj, click : click, l : this.#width};
+    this.#width += toolObj.width;
+    this.#view.style.width = `${this.#width}px`;
+    this.#count++;
+    if (toolObj instanceof tbkTool || toolObj instanceof tbkGroup) {
+    }
+  }
+};
+
+class tbkTool {
+  #color; #name; #tool;
+  get width() { return 40; };
+  get name() { return this.#name; };
+  get tool() { return this.#tool; };
+  get color() { return this.#color; };
   
-  view.addEventListener('mouseleave', function () {
-    hover.style.filter = 'opacity(0)';
-  });
+  // name icon [attach color shadow]
+  constructor(obj) {
+    var eh = eh + 'When creating Tool: ';
+    if (!obj || typeof obj != 'object') throw new Error(eh + 'Illegal parameter.');
+    if (!obj.name || typeof obj.name != 'string') throw new Error(eh + 'Illegal name.');
+    if (!obj.icon || typeof obj.icon != 'string' || !res[obj.icon]) throw new Error(eh + 'Illegal icon.');
+    if (obj.attach && (typeof obj.attach != 'string' || !res[obj.attach])) throw new Error(eh + 'Illegal attachment icon');
 
-  constP(this, 'elements', els);
-  constP(this, 'tools', tools);
-  var bound = false;
-  constP(this, 'bind', function (outer) {
-    if (bound) {
-      throw new Error(eh + 'View can only be bound once');
+    var color = obj.color || '-halfR';
+    if (color[0] == '-') {
+      color = `var(-${color})`;
     }
-    bound = true;
-    tools_wait.map(function (item) {
-      item(outer);
-    });
+    var tool = document.createElement("div");
+    tool.id = 'tool-' + obj.name;
+    tool.style = `--ccc: ${color}`;
+    tool.className = 'gt-tool';
+    var inner = '';
+    if (obj.shadow)
+      inner += '<div style="drop-shadow(0 0 1px var(--fullR))">';
+    inner += '<div style="' + (obj.attach ? (cssMask(obj.attach) || mask.style) : `width: ${res[obj.icon].w}px; height: ${res[obj.icon].h}px; position: absolute;`) + `"><div style="${cssImage(obj.icon)}" class="gt-icon"></div></div><div id="tool-a-${obj.name}"`;
+    if (obj.attach) inner += ` style="${cssImage(obj.attach)}"`;
+    inner += ' class="gt-icon"></div>';
+    if (obj.shadow) inner += '</div>';
+    tool.innerHTML = inner;
 
-    return view;
-  });
-  constP(this, 'view', view);
+    this.#color = color;
+    this.#name = obj.name;
+    this.#tool = tool;
+  }
+  turnOn() {
+    this.#tool.className = 'gt-tool-btn gt-rev';
+  }
+  turnOff() {
+    this.#tool.className = 'gt-tool-btn';
+  }
+  attach(icon) {
+    if (!icon || typeof icon != 'string' || !res[icon]) throw new Error(eh + 'When attaching icon: Illegal icon');
+    document.getElementById('tool-a-' + this.#name).style = cssImage(icon);
+    if (res[icon].shadow) this.#tool.style = cssMask(icon);
+  }
 };
-
-// icons, name[, color][, useShadow]
-var tbkBtnTool = function (icons, name) {
-  var ehh = eh + 'When creating Tool: ';
-  var color = '-fullR';
-  if (!name || typeof name != 'string') {
-    throw new Error(ehh + 'Illegal name.');
-  }
-  if (!icons instanceof Array || !icons.length) {
-    throw new Error(ehh + 'Illegal icons array.');
-  }
-
-  var tool = document.createElement('div');
-  tool.className = 'gt-tool-btn';
-  color = arguments[typeof arguments[2] == 'string' ? 2 : 3] || color;
-  if (color[0] == '-') {
-    color = `var(-${color})`;
-  }
-  tool.style = `--ccc: ${color}`;
-  var el = tool;
-  if (arguments[2] === true || arguments[3] === true) {
-    el = document.createElement('div');
-    tool.appendChild(el);
-    el.style.filter = 'drop-shadow(0 0 1px var(--fullR))';
-  }
-
-  var els = [];
-  icons.map(function (icon, i) {
-    if (!icon instanceof ikIcon && !icon instanceof ikIconGroup) {
-      throw new Error(ehh + 'Every icon should be an instance of gt.iconKit.Icon or gt.iconKit.IconGroup');
-    }
-    if (icon.width != icon.height) {
-      throw new Error(ehh + 'Every icon should be a square.');
-    }
-    els.push(icon.icon(icon.width == 30 ? null : {w: 30}));
-    el.appendChild(els[i]);
-    els[i].style.display = 'none';
-  });
-
-  var current = els[0], curId = 0;
-  current.style.display = 'block';
-
-  constP(this, 'name', name);
-  constP(this, 'tool', tool);
-  constP(this, 'color', color);
-  constP(this, 'setIcon', function (id) {
-    if (typeof id != 'number' || id < 0 || id >= els.length) {
-      throw new Error(eh + 'When changing icon: illegal id.');
-    }
-    current.style.filter = 'opacity(0)';
-    current = els[id];
-    curId = id;
-    current.style.filter = 'opacity(1)';
-  });
-  Object.defineProperties(this, {
-    currentIcon: {
-      get: function () {
-        return current;
-      }
-    },
-    currentId: {
-      get: function () {
-        return curId;
-      }
-    }
-  });
-};
-constP(tbkBtnTool.prototype, 'width', 40);
 
 var tbkGroup = function () {
   var eh = eh + 'When creating tool group: ';
@@ -259,7 +224,7 @@ var tbkGroup = function () {
   pop.style.display = 'none';
   
   tools.map(function (item) {
-    if (!item instanceof tbkBtnTool) {
+    if (!item instanceof tbkTool) {
       throw new Error(eh + 'Every tool should be an instance of gt.toolbarKit.BtnTool');
     }
     pop.appendChild(item.tool);
@@ -314,11 +279,11 @@ var tbkGroup = function () {
     })
   });
 };
-constP(tbkGroup.prototype, 'width', 40);
+// constP(tbkGroup.prototype, 'width', 40);
 
-gt.toolbarKit = {
+gt.toolbar = {
   Bar: tbkBar,
   View: tbkView,
-  BtnTool: tbkBtnTool,
+  Tool: tbkTool,
   Group: tbkGroup,
 };

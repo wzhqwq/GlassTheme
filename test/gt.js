@@ -10,12 +10,6 @@ const eh = "Glass Theme: ";
 function d(msg) {
   console.log(msg);
 }
-function constP(obj, name, value) {
-  Object.defineProperty(obj, name, {
-    value: value,
-    configurable: false
-  });
-}
 function checkP(eh, obj, arr) {
   arr.map(function (item) {
     if (!obj[item]) {
@@ -33,7 +27,7 @@ function checkPNumP(eh, obj, arr) {
 
 // animation utilities, public
 // 已知动画：工具栏移动色块动画、view切换动画(双对象)、工具切换图标(单次动画)
-((gt, eh) => {
+/* ((gt, eh) => {
   // animation controller class with separated timer
   // duration(ms)
   gt.aniCtrlr = function (element, from, to, duration) {
@@ -115,224 +109,136 @@ function checkPNumP(eh, obj, arr) {
     for (var i in t)
       this.element.style[i] = this.t[i];
   });
-})(gt, eh);
+})(gt, eh); */
 
-var ikIcon = function (img) {
-  var eh = eh + 'When creating icon: ';
-  var icon = document.createElement('div');
-  icon.className = 'gt-icon';
-  var arg1 = arguments[1], arg2 = arguments[2];
-  var color = typeof arg1 == 'string' ? arg1 : (typeof arg2 == 'string' ? arg2 : null);
-  var pos = typeof arg1 == 'object' ? arg1 : (typeof arg2 == 'object' ? arg2 : null);
-  var h, w;
+var res = {};
+var maps = [];
+var unmMask = {};
+var retina = window.devicePixelRatio == 2;
 
-  if (img && img instanceof Element) {
-    icon.appendChild(img);
-    if (color) {
-      throw new Error(eh + 'Element with color is not supported.');
-    }
-  }
-  else if (typeof img == 'string') {
-    var url = img;
-    if (color) {
-      if (color[0] == '-') {
-        color = `var(-${color})`;
+// TYPE: 0image 1spriteMap 2liveSprite
+
+gt.loadImage = function (name, path, path2x) {
+  if (typeof path != 'string' || typeof path2x != 'string') throw new Error(eh + "image path should be a string.");
+  if (res[name]) throw new Error(eh + `resourse name repeat: ${name}`);
+
+  var p = new Promise(function (rsv, rej) {
+    res[name] = {type: 0, path: retina && path2x ? path2x : path};
+    var image = new Image();
+    image.onload = function() {
+      res[name].w = image.width;
+      res[name].h = image.height;
+      rsv();
+    };
+    image.src = path;
+  });
+  return p;
+};
+
+gt.loadSpriteMap = function (info, path, path2x) {
+  var eh = eh + "when loading sprite map:";
+  path = retina && path2x ? path2x : path;
+  if (typeof path != 'string' || typeof path2x != 'string') throw new Error(eh + "sprite map path should be a string.");
+
+  var p = new Promise(function (rsv, rej) {
+    function ok(rsv) {
+      checkP(eh, info, ['width', 'height', 'rows']);
+      checkPNumP(eh, info, ['width', 'height']);
+  
+      if (!info.rows instanceof Array || !info.rows.length) {
+        throw new Error(eh + 'Illegal rows array');
       }
-      if (!pos) {
-        throw new Error(eh + 'size & position are needed');
-      }
-      w = pos.w; h = pos.h;
-      icon.style = `--cc: ${color}; -webkit-mask-image: url(${url}); -webkit-mask-position: -${pos.x}px -${pos.y}px; width: ${pos.w}px; height: ${pos.h}px`;
-    }
-    else {
-      if (typeof pos == 'object') {
-        icon.style = `background-image: url(${url}); background-position: -${pos.x}px -${pos.y}px; width: ${pos.w}px; height: ${pos.h}px`;
-        w = pos.w; h = pos.h;
-      }
-      else {
-        img = document.createElement('img');
-        img.onload = function () {
-          w = parseInt(img.width);
-          h = parseInt(img.height);
+    
+      var w = info.width, h = info.height, r = info.rows, i = 0;
+      r.map(function (col) {
+        var j = 0;
+        col.map(function (item) {
+          if (res[item.name]) throw new Error(eh + `resourse name repeat: ${name}`);
+  
+          var name = item.name;
+          res[name] = {type : 1, path : maps.length, color : item.color, x : j, y : i, w : w, h : h};
+          if (unmMask[name]) res[name].mask = unmMask[name];
+          j += w;
+        });
+        i += h;
+      });
+      if (info.masks) {
+        if (!info.masks instanceof Array) {
+          throw new Error(eh + 'Illegal masks array');
         }
-        icon.appendChild(img);
-        img.src = url;
+
+        r = info.masks;
+        r.map(function (col) {
+          var j = 0;
+          col.map(function (item) {
+            if (res[item])
+              res[item].mask = {path : maps.length, x : j, y : i, w : w, h : h};
+            else
+              unmMask[item] = {path : maps.length, x : j, y : i, w : w, h : h};
+            j += w;
+          });
+          i += h;
+        });
       }
+      
+      var img = new Image();
+      img.onload = function () {
+        maps.push({path : path, w : img.width, h : img.height});
+        rsv();
+      };
+      img.src = path;
     }
+    if (typeof info == "string") {
+      var xhr = new XMLHttpRequest();
+      xhr.open('get', info);
+      xhr.onload = function () {
+        info = JSON.parse(xhr.responseText);
+        ok(rsv);
+      }
+      xhr.send();
+    }
+    else if (typeof info == "object") ok(rsv);
+    else
+      throw new Error(eh + "json path should be a string");
+  });
+  return p;
+}
+
+function cssImage(name) {
+  var o = res[name];
+  var path = o.type ? maps[o.path].path : o.path;
+  var style;
+  if (o.color) {
+    var color = o.color;
+    if (color[0] == '-') {
+      color = `var(-${color})`;
+    }
+    style = `--cc: ${color}; -webkit-mask-image: url(${path}); width: ${o.w}px; height: ${o.h}px;`;
+    if (o.type) style += `-webkit-mask-position: -${o.x}px -${o.y}px;`;
+    if (retina) style += `-webkit-mask-size: ${maps[o.path].w / 2}px ${maps[o.path].h / 2}px`;
   }
   else {
-    throw new Error(eh + "When creating Icon: 'img' should be an element or a url.");
+    icon.style = `background-image: url(${path}); width: ${o.w}px; height: ${o.h}px;`;
+    if (o.type) style += `background-position: -${o.x}px -${o.y}px;`;
+    if (retina) style += `background-size: ${maps[o.path].w / 2}px ${maps[o.path].h / 2}px`;
   }
 
-  constP(this, 'icon', function (size) {
-    var ret = icon.cloneNode(true);
-    if (size) {
-      var wrap = document.createElement('div');
-      wrap.appendChild(ret);
-      wrap.style = `width: ${size.w}px; height: ${size.h}`;
-      if (size.w && size.h) {
-        ret.style.transform = `scaleX(${Number(size.w / pos.w).toFixed(2)}) scaleY(${Number(size.h / pos.h).toFixed(2)})`;
-      } else {
-        ret.style.transform = `scale(${size.w ? Number(size.w / pos.w).toFixed(2) : Number(size.h / pos.h).toFixed(2)})`;
-        if (size.w) {
-          size.h = size.w / w * h;
-        }
-        else {
-          size.w = size.h / h * w;
-        }
-      }
-      if (size.w < pos.w) {
-        ret.style.marginLeft = `-${(pos.w - size.w) / 2}px`;
-      }
-      if (size.h < pos.h) {
-        ret.style.marginTop = `-${(pos.h - size.h) / 2}px`;
-      }
-    }
-    return ret;
-  });
-  constP(this, 'width', pos.w); constP(this, 'height', pos.h);
-};
-
-var ikIconGroup = function (layers) {
-  var eh = eh + 'When creating icon group: ';
-  var icon = document.createElement('div');
-  var w = 0, h = 0;
-
-  if (!layers instanceof Array || !layers.length) {
-    throw new Error(eh + "Illeagal layer array.");
-  }
-  layers.map(function (item) {
-    // {img, color}
-    if (!item instanceof ikIcon) {
-      throw new Error(eh + "Every layer should be an instance of iconKit.Icon");
-    }
-    w = w < item.width ? item.width : w;
-    h = h < item.height ? item.height : h;
-    if (item.mask) {
-      var iconn = document.createElement("div");
-      icon.style = `-webkit-mask-image: url(${item.mask.url}); -webkit-mask-position: -${item.mask.x}px -${item.mask.y}px; width: ${item.mask.w}px; height: ${item.mask.h}px`
-      icon.className = 'gt-icon'
-      iconn.appendChild(icon);
-      icon = iconn;
-    }
-    icon.appendChild(item.icon());
-  });
-  icon.className = 'gt-icon-group';
-  icon.style = `width: ${w}px; height: ${h}px`;
-
-  constP(this, 'icon', function (size) {
-    var ret = icon.cloneNode(true);
-    if (size) {
-      var wrap = document.createElement('div');
-      wrap.appendChild(ret);
-      wrap.style = `width: ${size.w}px; height: ${size.h}`;
-      if (size.w && size.h) {
-        ret.style.transform = `scaleX(${Number(size.w / w).toFixed(2)}) scaleY(${Number(size.h / h).toFixed(2)})`;
-      } else {
-        ret.style.transform = `scale(${size.w ? Number(size.w / w).toFixed(2) : Number(size.h / h).toFixed(2)})`;
-        if (size.w) {
-          size.h = size.w / w * h;
-        }
-        else {
-          size.w = size.h / h * w;
-        }
-      }
-      if (size.w < w) {
-        ret.style.marginLeft = `-${(w - size.w) / 2}px`;
-      }
-      if (size.h < h) {
-        ret.style.marginTop = `-${(h - size.h) / 2}px`;
-      }
-    }
-    return ret;
-  });
-  constP(this, 'width', w); constP(this, 'height', h);
-};
-
-
-var ikIconMap = function (url, config) {
-  var eh = eh + 'When creating iconMap: ';
-  var icons = [];
-  if (typeof url != 'string') {
-    throw new Error(eh + 'url should be a String');
-  }
-  if (typeof config != 'object') {
-    throw new Error(eh + 'config should be an Object');
-  }
-  checkP(eh, config, ['width', 'height', 'rows']);
-  checkPNumP(eh, config, ['width', 'height']);
-  if (!config.rows instanceof Array || !config.rows.length) {
-    throw new Error(eh + 'Illegal rows array');
-  }
-
-  var w = config.width, h = config.height, r = config.rows;
-  var n = [];
-  r.map(function (col, i) {
-    var p = 0;
-    col.map(function (item) {
-      n[item.name] = new ikIcon(url, item.color, { x: p, y: i * h, w: w, h: h });
-      p += w;
-      if (item.hasMask) {
-        n[item.name].mask = { url: url, x: p, y: i * h, w: w, h: h };
-        p += w;
-      }
-    });
-  });
-
-  constP(this, 'getIcons', function () {
-    var ret = [];
-    [].slice.call(arguments).map(function (item) {
-      ret.push(n[item]);
-    });
-    return ret;
-  });
-};
-
-function ikIconAnim(src, width, height, frames, duration, color) {
-  this.icon = document.createElement('div');
-  this.prefix = (color ? 'webkitMask' : 'background') + 'Position';
-  this.width = width;
-  this.step = Math.floor(1000 * duration / frames);
-  this.current = 0;
-  this.frames = frames;
-
-  if (color && color[0] == '-') color = `var(-${color})`;
-  this.icon.style = (color ? `background-color: ${color}; -webkit-mask` : `background`) + `-image: url(${src}); width: ${width}px; height: ${height}px;`;
-
+  return style;
 }
-constP(ikIconAnim.prototype, 'play', function (infinite) {
-  if (infinite === undefined)
-    infinite = true;  // default value
-  this.icon.style.backgroundPosition
-});
-constP(ikIconAnim.prototype, 'playTo', function (frameId) {
-  with (this) {
-    if (typeof frameId != 'number' || frameId < 0 || frameId >= frames)
-      throw new Error('In playTo: illegal frame id.');
-    var thenF = () => {};
-    var f = function (i) {
-      icon.style[prefix] = `-${(++i) * width}px`;
-      if (i >= frames) i = 0;
-      if (i == frameId)
-        thenF();
-      else
-        setTimeout(f, step, i);
-    };
-    setTimeout(f, step, current);
-    current = frameId;
-    return {
-      then: function (f) {
-        thenF = f;
-      }
-    };
-  }
-});
+function cssMask(name) {
+  if (!res[name].mask) return;
+  var o = res[name].mask;
+  var style = `-webkit-mask-image: url(${maps[o.path].path}); width: ${o.w}px; height: ${o.h}px; -webkit-mask-position: -${o.x}px -${o.y}px; position: absolute;`
+  if (retina) style += `-webkit-mask-size: ${maps[o.path].w / 2}px ${maps[o.path].h / 2}px`;
+  return style;
+}
 
-gt.iconKit = {
-  Icon: ikIcon,
-  IconGroup: ikIconGroup,
-  IconMap: ikIconMap,
-  IconAnimation: ikIconAnim
+gt.loadLiveSprite = function (name, path, path2x) {
+  var eh = eh + "when loading live sprite:";
+  path = retina && path2x ? path2x : path;
+  if (typeof path != 'string' || typeof path2x != 'string') throw new Error(eh + "sprite path should be a string.");
+
+  
 }
 var tbkBar = function () {
   var ehh = eh + 'When creating tool bar: ';
@@ -384,7 +290,7 @@ var tbkBar = function () {
       if (typeof title != 'string' || !(tool = views[0].tools['t' + title])) {
         throw new Error(eh + 'Illegal tool name');
       }
-      if (!tool instanceof tbkBtnTool) {
+      if (!tool instanceof tbkTool) {
         throw new Error(eh + 'only button-like tool can be used as title');
       }
       if (!title_el[title]) {
@@ -451,137 +357,103 @@ var tbkBar = function () {
 
 // View类通用，包含视图切换函数，可以作为唯一的主视图与Bar实例绑定
 // 自定义：onopen onclose
-var tbkView = function () {
-  var ehh = eh + 'When creating tool view: ';
+class tbkView {
+  tools = {};
+  #count = 0;
+  #width = 0;
+  #view = document.createElement("div");
+  #hover = document.createElement("div");
+  #name;
+  get count() { return this.#count; };
+  get width() { return this.#width; };
+  get name() { return this.#name; };
+  get view() { return this.#view; };
 
-  var view = document.createElement('div');
-  var hover = document.createElement('div');
-  view.className = 'gt-toolbar-view';
-  hover.className = 'gt-toolbar-hover';
-  view.appendChild(hover);
-  var tools = [].slice.apply(arguments);
-  var tools_wait = [];
-  var els = [];
-  var width = 0;
-  var thisObj = this;
-  tools.map(function (tool, i) {
-    if (tool instanceof tbkGroup) {
-      tools_wait.push(tool.barReady);
-      tool.tools.map(function (tool) {
-        els['t' + tool.name] = tool.tool;
-        tools['t' + tool.name] = tool;
-      })
-    }
-    else if (tool instanceof tbkBtnTool) {
-      els['t' + tool.name] = els[i] = tool.tool;
-      tools['t' + tool.name] = tool;
-    } else {
-      throw new Error(ehh + 'Every tool should be an instance of Tool');
-    }
-
-    tool.viewObj = thisObj;
-    tool.position = i;
-    view.appendChild(tool.tool);
-    
-    var ml = width + 2;
-    width += tool.width;
-    
-    tool.tool.addEventListener('mouseenter', function () {
-      hover.style.width = `${tool.width - 4}px`;
-      hover.style.marginLeft = `${ml}px`;
-      hover.style.filter = 'opacity(.1)';
+  constructor(name) {
+    var view = this.#view, hover = this.#hover, tools = this.tools;
+    view.className = 'gt-toolbar-view';
+    hover.className = 'gt-toolbar-hover';
+    view.appendChild(hover);
+    view.addEventListener('mouseover', function (e) {
+      hover.style.filter = 'opacity(.2)';
+      var t = tools[e.target.id];
+      if (!t) return;
+      hover.style.marginLeft = `${t.l + 2}px`;
+      hover.style.width = `${t.tool.width - 4}px`;
     });
-  });
-  view.style.width = `${width}px`;
+    view.addEventListener('mouseleave', function (e) {
+      console.log('out')
+      if (e.target == view)
+        hover.style.filter = 'opacity(0)';
+    });
+    view.addEventListener('click', function (e) {
+      var t = tools[e.target.id];
+      if (t && t.click) t.click();
+    })
+
+    this.#name = name;
+  }
+
+  append(toolObj, click) {
+    if (this.tools[toolObj.name]) throw new Error(eh + 'tool name repeat: ' + toolObj.name);
+    this.#view.appendChild(toolObj.tool);
+    this.tools['tool-' + toolObj.name] = {tool : toolObj, click : click, l : this.#width};
+    this.#width += toolObj.width;
+    this.#view.style.width = `${this.#width}px`;
+    this.#count++;
+    if (toolObj instanceof tbkTool || toolObj instanceof tbkGroup) {
+    }
+  }
+};
+
+class tbkTool {
+  #color; #name; #tool;
+  get width() { return 40; };
+  get name() { return this.#name; };
+  get tool() { return this.#tool; };
+  get color() { return this.#color; };
   
-  view.addEventListener('mouseleave', function () {
-    hover.style.filter = 'opacity(0)';
-  });
+  // name icon [attach color shadow]
+  constructor(obj) {
+    var eh = eh + 'When creating Tool: ';
+    if (!obj || typeof obj != 'object') throw new Error(eh + 'Illegal parameter.');
+    if (!obj.name || typeof obj.name != 'string') throw new Error(eh + 'Illegal name.');
+    if (!obj.icon || typeof obj.icon != 'string' || !res[obj.icon]) throw new Error(eh + 'Illegal icon.');
+    if (obj.attach && (typeof obj.attach != 'string' || !res[obj.attach])) throw new Error(eh + 'Illegal attachment icon');
 
-  constP(this, 'elements', els);
-  constP(this, 'tools', tools);
-  var bound = false;
-  constP(this, 'bind', function (outer) {
-    if (bound) {
-      throw new Error(eh + 'View can only be bound once');
+    var color = obj.color || '-halfR';
+    if (color[0] == '-') {
+      color = `var(-${color})`;
     }
-    bound = true;
-    tools_wait.map(function (item) {
-      item(outer);
-    });
+    var tool = document.createElement("div");
+    tool.id = 'tool-' + obj.name;
+    tool.style = `--ccc: ${color}`;
+    tool.className = 'gt-tool';
+    var inner = '';
+    if (obj.shadow)
+      inner += '<div style="drop-shadow(0 0 1px var(--fullR))">';
+    inner += '<div style="' + (obj.attach ? (cssMask(obj.attach) || mask.style) : `width: ${res[obj.icon].w}px; height: ${res[obj.icon].h}px; position: absolute;`) + `"><div style="${cssImage(obj.icon)}" class="gt-icon"></div></div><div id="tool-a-${obj.name}"`;
+    if (obj.attach) inner += ` style="${cssImage(obj.attach)}"`;
+    inner += ' class="gt-icon"></div>';
+    if (obj.shadow) inner += '</div>';
+    tool.innerHTML = inner;
 
-    return view;
-  });
-  constP(this, 'view', view);
+    this.#color = color;
+    this.#name = obj.name;
+    this.#tool = tool;
+  }
+  turnOn() {
+    this.#tool.className = 'gt-tool-btn gt-rev';
+  }
+  turnOff() {
+    this.#tool.className = 'gt-tool-btn';
+  }
+  attach(icon) {
+    if (!icon || typeof icon != 'string' || !res[icon]) throw new Error(eh + 'When attaching icon: Illegal icon');
+    document.getElementById('tool-a-' + this.#name).style = cssImage(icon);
+    if (res[icon].shadow) this.#tool.style = cssMask(icon);
+  }
 };
-
-// icons, name[, color][, useShadow]
-var tbkBtnTool = function (icons, name) {
-  var ehh = eh + 'When creating Tool: ';
-  var color = '-fullR';
-  if (!name || typeof name != 'string') {
-    throw new Error(ehh + 'Illegal name.');
-  }
-  if (!icons instanceof Array || !icons.length) {
-    throw new Error(ehh + 'Illegal icons array.');
-  }
-
-  var tool = document.createElement('div');
-  tool.className = 'gt-tool-btn';
-  color = arguments[typeof arguments[2] == 'string' ? 2 : 3] || color;
-  if (color[0] == '-') {
-    color = `var(-${color})`;
-  }
-  tool.style = `--ccc: ${color}`;
-  var el = tool;
-  if (arguments[2] === true || arguments[3] === true) {
-    el = document.createElement('div');
-    tool.appendChild(el);
-    el.style.filter = 'drop-shadow(0 0 1px var(--fullR))';
-  }
-
-  var els = [];
-  icons.map(function (icon, i) {
-    if (!icon instanceof ikIcon && !icon instanceof ikIconGroup) {
-      throw new Error(ehh + 'Every icon should be an instance of gt.iconKit.Icon or gt.iconKit.IconGroup');
-    }
-    if (icon.width != icon.height) {
-      throw new Error(ehh + 'Every icon should be a square.');
-    }
-    els.push(icon.icon(icon.width == 30 ? null : {w: 30}));
-    el.appendChild(els[i]);
-    els[i].style.display = 'none';
-  });
-
-  var current = els[0], curId = 0;
-  current.style.display = 'block';
-
-  constP(this, 'name', name);
-  constP(this, 'tool', tool);
-  constP(this, 'color', color);
-  constP(this, 'setIcon', function (id) {
-    if (typeof id != 'number' || id < 0 || id >= els.length) {
-      throw new Error(eh + 'When changing icon: illegal id.');
-    }
-    current.style.filter = 'opacity(0)';
-    current = els[id];
-    curId = id;
-    current.style.filter = 'opacity(1)';
-  });
-  Object.defineProperties(this, {
-    currentIcon: {
-      get: function () {
-        return current;
-      }
-    },
-    currentId: {
-      get: function () {
-        return curId;
-      }
-    }
-  });
-};
-constP(tbkBtnTool.prototype, 'width', 40);
 
 var tbkGroup = function () {
   var eh = eh + 'When creating tool group: ';
@@ -595,7 +467,7 @@ var tbkGroup = function () {
   pop.style.display = 'none';
   
   tools.map(function (item) {
-    if (!item instanceof tbkBtnTool) {
+    if (!item instanceof tbkTool) {
       throw new Error(eh + 'Every tool should be an instance of gt.toolbarKit.BtnTool');
     }
     pop.appendChild(item.tool);
@@ -650,12 +522,12 @@ var tbkGroup = function () {
     })
   });
 };
-constP(tbkGroup.prototype, 'width', 40);
+// constP(tbkGroup.prototype, 'width', 40);
 
-gt.toolbarKit = {
+gt.toolbar = {
   Bar: tbkBar,
   View: tbkView,
-  BtnTool: tbkBtnTool,
+  Tool: tbkTool,
   Group: tbkGroup,
 };
 
