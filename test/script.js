@@ -43,10 +43,42 @@ $(function () {
     $('.main').append(fish.icon);
   });*/
   Promise.all([gt.loadSpriteMap('icons.json', 'icons.png', 'icons2x.png')]).then(function () {
-    var a1 = new gt.toolbar.Tool({name: 'codes', icon: 'storage'});
-    var a2 = new gt.toolbar.Tool({name: 'runLast', icon: 'run', attach: 'bwMini'})
-    var b1 = new gt.toolbar.View('test1');
-    b1.append(a1, () => {alert('aaa')}); b1.append(a2, () => {alert('bbb')});
-    $('.main').append(b1.view);
+    var Tool = gt.toolbar.Tool, View = gt.toolbar.View, Bar = gt.toolbar.Bar;
+
+    var a1;
+    var b1 = new View('main');
+    var c1 = new Tool({name: 'run', icon: 'run'});
+    var c2 = new Tool({name: 'debug', icon: 'debug'});
+    var c3 = new Tool({name: 'test', icon: 'test'});
+    b1.append(c1, function () {
+      a1.enter('run');
+    });
+    b1.append(c2, function () {
+      a1.enter('debug', 'debug');
+    });
+    b1.append(c3, function () {
+      a1.enter('test');
+    });
+    a1 = new Bar(b1);
+    var b2 = new View('debug');
+    var c4 = new Tool({name: 'playPause', icon: 'pause'});
+    b2.append(c4, function () {
+
+    });
+    b2.append(new Tool({name: 'dbgAbort', icon: 'stop'}), function () {
+      a1.exit();
+    });
+    b2.append(new Tool({name: 'dbgStep', icon: 'fw'}), function () {
+
+    });
+    b2.append(new Tool({name: 'dbgEnter', icon: 'stepEnt'}), function () {
+
+    });
+    b2.append(new Tool({name: 'dbgEsc', icon: 'stepEsc'}), function () {
+
+    });
+    a1.append(b2);
+
+    $('.main').append(a1.bar);
   });
 });

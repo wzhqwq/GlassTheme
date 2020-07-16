@@ -1,4 +1,4 @@
-var tbkBar = function () {
+/* var tbkBar = function () {
   var ehh = eh + 'When creating tool bar: ';
 
   var bar = document.createElement('div');
@@ -112,8 +112,70 @@ var tbkBar = function () {
   
   constP(this, 'bar', outer);
 };
+ */
+class tbkBar {
+  views = {};
+  #count = 0;
+  #bar = document.createElement("div");
+  #stack = [];
+  get count() { return this.#count; };
+  get bar() { return this.#bar; };
 
-// View类通用，包含视图切换函数，可以作为唯一的主视图与Bar实例绑定
+  constructor(view) {
+    if (!(view instanceof tbkView))
+      throw new Error(eh + 'Please append gt.toolbar.View to Bar');
+    this.views[view.name] = view;
+    var e = view.view;
+    e.style.zIndex = '0';
+    this.#bar.appendChild(e);
+    this.#bar.className = 'gt-toolbar';
+    this.#bar.style.width = `${view.width}px`;
+    this.#stack.push(view);
+    this.#stack.top = function () {
+      return this[this.length - 1];
+    }
+  }
+
+  append(view) {
+    if (!(view instanceof tbkView))
+      throw new Error(eh + 'Please append gt.toolbar.View to Bar');
+    this.views[view.name] = view;
+    var e = view.view;
+    e.style = `width: ${view.width}px; filter: opacity(0); z-index: -1; margin-left: 20px`;
+    this.#bar.appendChild(e);
+  }
+  enter(viewName, titleTool) {
+    var view = this.views[viewName], title, now = this.#stack.top();
+    var ehh = eh + 'when entering into another view:';
+    if (!view) throw new Error(ehh + 'inexistent view');
+
+    if (titleTool) {
+      title = now.tools[titleTool];
+      if (!title) throw new Error(ehh + 'inexistent tool');
+      if (title.tool.width != 40) throw new Error(ehh + 'illegal tool');
+
+      now.view.style = `width: ${title.l + 40}px; z-index: ${this.#stack.length}; margin-left: -${title.l}px`;
+      this.#stack.push(view);
+      view.view.style = `width: ${view.width}px; z-index: ${this.#stack.length}; margin-left: 40px;`;
+      this.#bar.style.width = `${view.width + 40}px`;
+    }
+    else {
+      now.view.style = `width: ${now.view.width}px; filter: opacity(0); z-index: ${this.#stack.length}; margin-left: -20px`;
+      this.#stack.push(view);
+      view.view.style = `width: ${view.width}px; z-index: ${this.#stack.length}; margin-left: 0`;
+      this.#bar.style.width = `${view.width}px`;
+    }
+  }
+  exit() {
+    if (!this.#stack.length) return;
+    var now = this.#stack.pop();
+    now.view.style = `width: ${now.width}px; filter: opacity(0); z-index: -1; margin-left: 20px`;
+    now = this.#stack.top();
+    now.view.style = `width: ${now.width}px; z-index: ${this.#stack.length}; margin-left: 0`;
+    this.#bar.style.width = `${now.width}px`;
+  }
+}
+
 // 自定义：onopen onclose
 class tbkView {
   tools = {};
@@ -134,7 +196,7 @@ class tbkView {
     view.appendChild(hover);
     view.addEventListener('mouseover', function (e) {
       hover.style.filter = 'opacity(.2)';
-      var t = tools[e.target.id];
+      var t = tools[e.target.id.split('-').pop()];
       if (!t) return;
       hover.style.marginLeft = `${t.l + 2}px`;
       hover.style.width = `${t.tool.width - 4}px`;
@@ -144,7 +206,7 @@ class tbkView {
         hover.style.filter = 'opacity(0)';
     });
     view.addEventListener('click', function (e) {
-      var t = tools[e.target.id];
+      var t = tools[e.target.id.split('-').pop()];
       if (t && t.click) t.click();
     })
 
@@ -154,7 +216,7 @@ class tbkView {
   append(toolObj, click) {
     if (this.tools[toolObj.name]) throw new Error(eh + 'tool name repeat: ' + toolObj.name);
     this.#view.appendChild(toolObj.tool);
-    this.tools['tool-' + toolObj.name] = {tool : toolObj, click : click, l : this.#width};
+    this.tools[toolObj.name] = {tool : toolObj, click : click, l : this.#width};
     this.#width += toolObj.width;
     this.#view.style.width = `${this.#width}px`;
     this.#count++;
@@ -172,11 +234,11 @@ class tbkTool {
   
   // name icon [attach color shadow]
   constructor(obj) {
-    var eh = eh + 'When creating Tool: ';
-    if (!obj || typeof obj != 'object') throw new Error(eh + 'Illegal parameter.');
-    if (!obj.name || typeof obj.name != 'string') throw new Error(eh + 'Illegal name.');
-    if (!obj.icon || typeof obj.icon != 'string' || !res[obj.icon]) throw new Error(eh + 'Illegal icon.');
-    if (obj.attach && (typeof obj.attach != 'string' || !res[obj.attach])) throw new Error(eh + 'Illegal attachment icon');
+    var ehh = eh + 'When creating Tool: ';
+    if (!obj || typeof obj != 'object') throw new Error(ehh + 'Illegal parameter.');
+    if (!obj.name || typeof obj.name != 'string') throw new Error(ehh + 'Illegal name.');
+    if (!obj.icon || typeof obj.icon != 'string' || !res[obj.icon]) throw new Error(ehh + 'Illegal icon.');
+    if (obj.attach && (typeof obj.attach != 'string' || !res[obj.attach])) throw new Error(ehh + 'Illegal attachment icon');
 
     var color = obj.color || '-halfR';
     if (color[0] == '-') {
@@ -189,7 +251,7 @@ class tbkTool {
     var inner = '';
     if (obj.shadow)
       inner += '<div style="drop-shadow(0 0 1px var(--fullR))">';
-    inner += '<div style="' + (obj.attach ? (cssMask(obj.attach) || mask.style) : `width: ${res[obj.icon].w}px; height: ${res[obj.icon].h}px; position: absolute;`) + `"><div style="${cssImage(obj.icon)}" class="gt-icon"></div></div><div id="tool-a-${obj.name}"`;
+    inner += '<div id="tool-m-' + obj.name + '" style="' + (obj.attach ? cssMask(obj.attach) : `width: ${res[obj.icon].w}px; height: ${res[obj.icon].h}px; position: absolute;`) + `"><div id="tool-a-${obj.name}" style="${cssImage(obj.icon)}" class="gt-icon"></div></div><div id="tool-b-${obj.name}"`;
     if (obj.attach) inner += ` style="${cssImage(obj.attach)}"`;
     inner += ' class="gt-icon"></div>';
     if (obj.shadow) inner += '</div>';
@@ -207,13 +269,17 @@ class tbkTool {
   }
   attach(icon) {
     if (!icon || typeof icon != 'string' || !res[icon]) throw new Error(eh + 'When attaching icon: Illegal icon');
+    document.getElementById('tool-b-' + this.#name).style = cssImage(icon);
+    if (res[icon].mask) document.getElementById('tool-m-' + this.#name).style = cssMask(icon);
+  }
+  change(icon) {
+    if (!icon || typeof icon != 'string' || !res[icon]) throw new Error(eh + 'When changing icon: Illegal icon');
     document.getElementById('tool-a-' + this.#name).style = cssImage(icon);
-    if (res[icon].shadow) this.#tool.style = cssMask(icon);
   }
 };
 
 var tbkGroup = function () {
-  var eh = eh + 'When creating tool group: ';
+  var ehh = eh + 'When creating tool group: ';
   var tools = [].slice.call(arguments);
   var els = [];
   
@@ -225,7 +291,7 @@ var tbkGroup = function () {
   
   tools.map(function (item) {
     if (!item instanceof tbkTool) {
-      throw new Error(eh + 'Every tool should be an instance of gt.toolbarKit.BtnTool');
+      throw new Error(ehh + 'Every tool should be an instance of gt.toolbarKit.BtnTool');
     }
     pop.appendChild(item.tool);
     els[item.name] = item.tool;

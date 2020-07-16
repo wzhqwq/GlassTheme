@@ -41,6 +41,7 @@
   width: 30px;
   height: 30px;
   padding: 5px;
+  cursor: pointer;
 }
 
 .gt-tool-group {
@@ -116,6 +117,10 @@
 .gt-toolbar-view {
   height: 40px;
   position: absolute;
+  overflow: hidden;
+  transition-property: filter, margin-left, width;
+  transition-duration: .2s;
+  transition-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 .gt-toolbar-hover {
   position: absolute;

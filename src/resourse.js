@@ -23,24 +23,24 @@ gt.loadImage = function (name, path, path2x) {
 };
 
 gt.loadSpriteMap = function (info, path, path2x) {
-  var eh = eh + "when loading sprite map:";
+  var ehh = eh + "when loading sprite map:";
   path = retina && path2x ? path2x : path;
-  if (typeof path != 'string' || typeof path2x != 'string') throw new Error(eh + "sprite map path should be a string.");
+  if (typeof path != 'string' || typeof path2x != 'string') throw new Error(ehh + "sprite map path should be a string.");
 
   var p = new Promise(function (rsv, rej) {
     function ok(rsv) {
-      checkP(eh, info, ['width', 'height', 'rows']);
-      checkPNumP(eh, info, ['width', 'height']);
+      checkP(ehh, info, ['width', 'height', 'rows']);
+      checkPNumP(ehh, info, ['width', 'height']);
   
       if (!info.rows instanceof Array || !info.rows.length) {
-        throw new Error(eh + 'Illegal rows array');
+        throw new Error(ehh + 'Illegal rows array');
       }
     
       var w = info.width, h = info.height, r = info.rows, i = 0;
       r.map(function (col) {
         var j = 0;
         col.map(function (item) {
-          if (res[item.name]) throw new Error(eh + `resourse name repeat: ${name}`);
+          if (res[item.name]) throw new Error(ehh + `resourse name repeat: ${name}`);
   
           var name = item.name;
           res[name] = {type : 1, path : maps.length, color : item.color, x : j, y : i, w : w, h : h};
@@ -51,7 +51,7 @@ gt.loadSpriteMap = function (info, path, path2x) {
       });
       if (info.masks) {
         if (!info.masks instanceof Array) {
-          throw new Error(eh + 'Illegal masks array');
+          throw new Error(ehh + 'Illegal masks array');
         }
 
         r = info.masks;
@@ -86,7 +86,7 @@ gt.loadSpriteMap = function (info, path, path2x) {
     }
     else if (typeof info == "object") ok(rsv);
     else
-      throw new Error(eh + "json path should be a string");
+      throw new Error(ehh + "json path should be a string");
   });
   return p;
 }
@@ -121,9 +121,9 @@ function cssMask(name) {
 }
 
 gt.loadLiveSprite = function (name, path, path2x) {
-  var eh = eh + "when loading live sprite:";
+  var ehh = eh + "when loading live sprite:";
   path = retina && path2x ? path2x : path;
-  if (typeof path != 'string' || typeof path2x != 'string') throw new Error(eh + "sprite path should be a string.");
+  if (typeof path != 'string' || typeof path2x != 'string') throw new Error(ehh + "sprite path should be a string.");
 
   
 }
