@@ -112,7 +112,16 @@
   
   constP(this, 'bar', outer);
 };
- */
+*/
+class tbkOther {
+  #width;
+  get width() { return this.#width; };
+
+  constructor (width) {
+    this.#width = width;
+  }
+}
+
 class tbkBar {
   views = {};
   #count = 0;
@@ -154,9 +163,10 @@ class tbkBar {
       if (!title) throw new Error(ehh + 'inexistent tool');
       if (title.tool.width != 40) throw new Error(ehh + 'illegal tool');
 
-      now.view.style = `width: ${title.l + 40}px; z-index: ${this.#stack.length}; margin-left: -${title.l}px`;
+      now.view.style = `width: ${title.l + 40}px; z-index: ${this.#stack.length}; margin-left: -${title.l}px; background-color: var(--priC)`;
+      now.disabled = true;
       this.#stack.push(view);
-      view.view.style = `width: ${view.width}px; z-index: ${this.#stack.length}; margin-left: 40px;`;
+      view.view.style = `width: ${view.width}px; z-index: ${this.#stack.length}; margin-left: 40px; box-shadow: 1px 0 4px 2px var(--bgC)`;
       this.#bar.style.width = `${view.width + 40}px`;
     }
     else {
@@ -172,17 +182,19 @@ class tbkBar {
     now.view.style = `width: ${now.width}px; filter: opacity(0); z-index: -1; margin-left: 20px`;
     now = this.#stack.top();
     now.view.style = `width: ${now.width}px; z-index: ${this.#stack.length}; margin-left: 0`;
+    now.disabled = false;
     this.#bar.style.width = `${now.width}px`;
   }
 }
 
 // 自定义：onopen onclose
+var viewC = 0;
 class tbkView {
   tools = {};
+  disabled = false;
   #count = 0;
   #width = 0;
   #view = document.createElement("div");
-  #hover = document.createElement("div");
   #name;
   get count() { return this.#count; };
   get width() { return this.#width; };
@@ -190,22 +202,27 @@ class tbkView {
   get view() { return this.#view; };
 
   constructor(name) {
-    var view = this.#view, hover = this.#hover, tools = this.tools;
+    var view = this.#view, tools = this.tools, hover = null, thisObj = this;
     view.className = 'gt-toolbar-view';
-    hover.className = 'gt-toolbar-hover';
-    view.appendChild(hover);
+    var vc = viewC++;
+    view.innerHTML += `<div id="viewhover-${vc}" class="gt-toolbar-hover"></div>`;
     view.addEventListener('mouseover', function (e) {
+      if (thisObj.disabled) return;
+      if (!hover) hover = document.getElementById(`viewhover-${vc}`);
       hover.style.filter = 'opacity(.2)';
-      var t = tools[e.target.id.split('-').pop()];
+      var t = tools[e.target.id.split('-')[1]];
       if (!t) return;
+      console.log(e.target.id);
       hover.style.marginLeft = `${t.l + 2}px`;
       hover.style.width = `${t.tool.width - 4}px`;
     });
     view.addEventListener('mouseleave', function (e) {
+      if (!hover) hover = document.getElementById(`viewhover-${vc}`);
       if (e.target == view)
         hover.style.filter = 'opacity(0)';
     });
     view.addEventListener('click', function (e) {
+      if (thisObj.disabled) return;
       var t = tools[e.target.id.split('-').pop()];
       if (t && t.click) t.click();
     })
@@ -214,14 +231,14 @@ class tbkView {
   }
 
   append(toolObj, click) {
+    if (!(toolObj instanceof tbkTool || toolObj instanceof tbkGroup || toolObj instanceof tbkOther))
+      throw new Error(eh + 'illegal tool');
     if (this.tools[toolObj.name]) throw new Error(eh + 'tool name repeat: ' + toolObj.name);
-    this.#view.appendChild(toolObj.tool);
+    this.#view.innerHTML += toolObj.tool;
     this.tools[toolObj.name] = {tool : toolObj, click : click, l : this.#width};
     this.#width += toolObj.width;
     this.#view.style.width = `${this.#width}px`;
     this.#count++;
-    if (toolObj instanceof tbkTool || toolObj instanceof tbkGroup) {
-    }
   }
 };
 
@@ -244,28 +261,23 @@ class tbkTool {
     if (color[0] == '-') {
       color = `var(-${color})`;
     }
-    var tool = document.createElement("div");
-    tool.id = 'tool-' + obj.name;
-    tool.style = `--ccc: ${color}`;
-    tool.className = 'gt-tool';
-    var inner = '';
+    var tool = `<div id="tool-${obj.name}" style="--ccc: ${color}" class="gt-tool">`;
     if (obj.shadow)
-      inner += '<div style="drop-shadow(0 0 1px var(--fullR))">';
-    inner += '<div id="tool-m-' + obj.name + '" style="' + (obj.attach ? cssMask(obj.attach) : `width: ${res[obj.icon].w}px; height: ${res[obj.icon].h}px; position: absolute;`) + `"><div id="tool-a-${obj.name}" style="${cssImage(obj.icon)}" class="gt-icon"></div></div><div id="tool-b-${obj.name}"`;
-    if (obj.attach) inner += ` style="${cssImage(obj.attach)}"`;
-    inner += ' class="gt-icon"></div>';
-    if (obj.shadow) inner += '</div>';
-    tool.innerHTML = inner;
+      tool += '<div style="drop-shadow(0 0 1px var(--fullR))">';
+    tool += '<div id="tool-m-' + obj.name + '" style="' + (obj.attach ? cssMask(obj.attach) : `width: ${res[obj.icon].w}px; height: ${res[obj.icon].h}px; position: absolute;`) + `"><div id="tool-a-${obj.name}" style="${cssImage(obj.icon)}" class="gt-icon"></div></div><div id="tool-b-${obj.name}"`;
+    if (obj.attach) tool += ` style="${cssImage(obj.attach)}"`;
+    tool += ' class="gt-icon"></div></div>';
+    if (obj.shadow) tool += '</div>';
 
     this.#color = color;
     this.#name = obj.name;
     this.#tool = tool;
   }
   turnOn() {
-    this.#tool.className = 'gt-tool-btn gt-rev';
+    document.getElementById('tool-' + this.#name).className = 'gt-tool-btn gt-rev';
   }
   turnOff() {
-    this.#tool.className = 'gt-tool-btn';
+    document.getElementById('tool-' + this.#name).className = 'gt-tool-btn';
   }
   attach(icon) {
     if (!icon || typeof icon != 'string' || !res[icon]) throw new Error(eh + 'When attaching icon: Illegal icon');

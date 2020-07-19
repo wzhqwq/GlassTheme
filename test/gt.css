@@ -118,7 +118,7 @@
   height: 40px;
   position: absolute;
   overflow: hidden;
-  transition-property: filter, margin-left, width;
+  transition-property: filter, margin-left, width, background-color;
   transition-duration: .2s;
   transition-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
 }

@@ -1,11 +1,7 @@
-class Pop {
-  #baseEl = null;
-  #baseMain = document.createElement("div");
-  #fullMain = document.createElement("div");
-  #att = null;
+/*
+分为原地弹出和居中弹出
 
-  constructor(baseElement, useBorder, menu) {
-    this.#baseEl = baseElement;
-    if (useBorder) this.#fullMain
-  }
+*/
+class PopControl {
+  
 }
