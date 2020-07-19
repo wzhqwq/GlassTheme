@@ -45,6 +45,7 @@ $(function () {
   Promise.all([gt.loadSpriteMap('icons.json', 'icons.png', 'icons2x.png')]).then(function () {
     var Tool = gt.toolbar.Tool, View = gt.toolbar.View, Bar = gt.toolbar.Bar;
 
+    var isPlay = false;
     var a1;
     var b1 = new View('main');
     var c1 = new Tool({name: 'run', icon: 'run'});
@@ -54,6 +55,8 @@ $(function () {
       a1.enter('run');
     });
     b1.append(c2, function () {
+      isPlay = true;
+      c4.change('pause');
       a1.enter('debug', 'debug');
     });
     b1.append(c3, function () {
@@ -63,10 +66,12 @@ $(function () {
     var b2 = new View('debug');
     var c4 = new Tool({name: 'playPause', icon: 'pause'});
     b2.append(c4, function () {
-
+      c4.change(isPlay ? 'play' : 'pause');
+      isPlay = !isPlay;
     });
     b2.append(new Tool({name: 'dbgAbort', icon: 'stop'}), function () {
       a1.exit();
+      isPlay = false;
     });
     b2.append(new Tool({name: 'dbgStep', icon: 'fw'}), function () {
 
