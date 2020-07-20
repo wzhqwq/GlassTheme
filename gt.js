@@ -110,17 +110,7 @@ function checkPNumP(eh, obj, arr) {
       this.element.style[i] = this.t[i];
   });
 })(gt, eh); */
-gt.getBtn = function () {
 
-}
-
-gt.getInput = function () {
-
-}
-
-gt.getCheckBox = function () {
-    
-}
 var res = {};
 var maps = [];
 var unmMask = {};
@@ -181,11 +171,13 @@ gt.loadSpriteMap = function (info, path, path2x) {
         r.map(function (col) {
           var j = 0;
           col.map(function (item) {
-            if (res[item])
-              res[item].mask = {path : maps.length, x : j, y : i, w : w, h : h};
-            else
-              unmMask[item] = {path : maps.length, x : j, y : i, w : w, h : h};
-            j += w;
+            item.split(',').map(function (item) {
+              if (res[item])
+                res[item].mask = {path : maps.length, x : j, y : i, w : w, h : h};
+              else
+                unmMask[item] = {path : maps.length, x : j, y : i, w : w, h : h};
+              j += w;
+            });
           });
           i += h;
         });
@@ -461,10 +453,10 @@ class tbkView {
     view.addEventListener('mouseover', function (e) {
       if (thisObj.disabled) return;
       if (!hover) hover = document.getElementById(`viewhover-${vc}`);
-      hover.style.filter = 'opacity(.2)';
-      var t = tools[e.target.id.split('-')[1]];
+      var t = tools[e.target.id.split('-')[2] || '-'];
       if (!t) return;
       console.log(e.target.id);
+      hover.style.filter = 'opacity(.2)';
       hover.style.marginLeft = `${t.l + 2}px`;
       hover.style.width = `${t.tool.width - 4}px`;
     });

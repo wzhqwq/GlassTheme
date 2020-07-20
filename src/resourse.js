@@ -58,11 +58,13 @@ gt.loadSpriteMap = function (info, path, path2x) {
         r.map(function (col) {
           var j = 0;
           col.map(function (item) {
-            if (res[item])
-              res[item].mask = {path : maps.length, x : j, y : i, w : w, h : h};
-            else
-              unmMask[item] = {path : maps.length, x : j, y : i, w : w, h : h};
-            j += w;
+            item.split(',').map(function (item) {
+              if (res[item])
+                res[item].mask = {path : maps.length, x : j, y : i, w : w, h : h};
+              else
+                unmMask[item] = {path : maps.length, x : j, y : i, w : w, h : h};
+              j += w;
+            });
           });
           i += h;
         });

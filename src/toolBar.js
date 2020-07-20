@@ -209,10 +209,10 @@ class tbkView {
     view.addEventListener('mouseover', function (e) {
       if (thisObj.disabled) return;
       if (!hover) hover = document.getElementById(`viewhover-${vc}`);
-      hover.style.filter = 'opacity(.2)';
-      var t = tools[e.target.id.split('-')[1]];
+      var t = tools[e.target.id.split('-')[2] || '-'];
       if (!t) return;
       console.log(e.target.id);
+      hover.style.filter = 'opacity(.2)';
       hover.style.marginLeft = `${t.l + 2}px`;
       hover.style.width = `${t.tool.width - 4}px`;
     });
