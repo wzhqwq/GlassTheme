@@ -14,7 +14,7 @@ class Pop {
   mouseleaveHandler;
   clickHandler;
 
-  constructor(pop_up, custom, onShow) {
+  constructor(pop_up, custom, onShow, onHide) {
     if (!pop_up instanceof Element) throw new Error(eh + "wrong pop up element used to create Pop");
     if (!~pop_up.style.width.search('px') || (!~pop_up.style.height.search('px') && !(~pop_up.style.maxHeight.search('px') && ~pop_up.style.minHeight.search('px'))))
       throw new Error(eh + "size of pop-up element should be absolute digital");
@@ -161,14 +161,15 @@ class Pop {
       }
     };
     function distruct() {
-      fix1.appendChild(origin);
-      fix1.style = fix11 + 'transform: scale(1);';
-      fix2.style = fix21;
       timer3 = setTimeout(() => {
         fix1.style = fix2.style = 'display: none;';
         now.appendChild(origin);
         timer3 = 0;
       }, 300);
+      fix1.appendChild(origin);
+      fix1.style = fix11 + 'transform: scale(1);';
+      fix2.style = fix21;
+      if (onHide) onHide();
     }
     fix2.onmouseleave = function () {
       if (timer3) return;
@@ -178,6 +179,7 @@ class Pop {
         timer_fatal = 0;
         fix1.style = fix2.style = 'display: none;';
         now.appendChild(origin);
+        if (onHide) onHide();
         return;
       }
       distruct();

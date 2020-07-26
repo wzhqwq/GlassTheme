@@ -190,8 +190,8 @@ gt.loadSpriteMap = function (info, path, path2x) {
                 res[item].mask = {path : maps.length, x : j, y : i, w : w, h : h};
               else
                 unmMask[item] = {path : maps.length, x : j, y : i, w : w, h : h};
+              });
               j += w;
-            });
           });
           i += h;
         });
@@ -272,7 +272,7 @@ class Pop {
   mouseleaveHandler;
   clickHandler;
 
-  constructor(pop_up, custom, onShow) {
+  constructor(pop_up, custom, onShow, onHide) {
     if (!pop_up instanceof Element) throw new Error(eh + "wrong pop up element used to create Pop");
     if (!~pop_up.style.width.search('px') || (!~pop_up.style.height.search('px') && !(~pop_up.style.maxHeight.search('px') && ~pop_up.style.minHeight.search('px'))))
       throw new Error(eh + "size of pop-up element should be absolute digital");
@@ -419,14 +419,15 @@ class Pop {
       }
     };
     function distruct() {
-      fix1.appendChild(origin);
-      fix1.style = fix11 + 'transform: scale(1);';
-      fix2.style = fix21;
       timer3 = setTimeout(() => {
         fix1.style = fix2.style = 'display: none;';
         now.appendChild(origin);
         timer3 = 0;
       }, 300);
+      fix1.appendChild(origin);
+      fix1.style = fix11 + 'transform: scale(1);';
+      fix2.style = fix21;
+      if (onHide) onHide();
     }
     fix2.onmouseleave = function () {
       if (timer3) return;
@@ -436,6 +437,7 @@ class Pop {
         timer_fatal = 0;
         fix1.style = fix2.style = 'display: none;';
         now.appendChild(origin);
+        if (onHide) onHide();
         return;
       }
       distruct();
@@ -540,10 +542,10 @@ class tbkView {
     var view = this.#view, tools = this.tools, hover = null, thisObj = this;
     view.className = 'gt-toolbar-view';
     var vc = viewC++;
-    view.innerHTML += `<div id="viewhover-${vc}" class="gt-toolbar-hover"></div>`;
+    view.innerHTML += `<div class="gt-toolbar-hover"></div>`;
     view.addEventListener('mouseover', function (e) {
       if (thisObj.disabled) return;
-      if (!hover) hover = document.getElementById(`viewhover-${vc}`);
+      if (!hover) hover = view.firstChild;
       var t = tools[e.target.id.split('-')[2] || '-'];
       if (!t) return;
       hover.style.filter = 'opacity(.2)';
@@ -551,7 +553,7 @@ class tbkView {
       hover.style.width = `${t.tool.width - 4}px`;
     });
     view.addEventListener('mouseleave', function (e) {
-      if (!hover) hover = document.getElementById(`viewhover-${vc}`);
+      if (!hover) hover = view.firstChild;
       hover.style.filter = 'opacity(0)';
     });
     view.addEventListener('click', function (e) {
@@ -559,7 +561,7 @@ class tbkView {
       var t = tools[e.target.id.split('-').pop()];
       if (t) {
         if (t.pop) t.pop.clickHandler(document.getElementById('tool-' + t.tool.name).parentElement);
-        if (t.click) t.click();
+        if (t.click) t.click(t.tool);
       }
     });
     view.addEventListener('mousemove', function (e) {
@@ -584,20 +586,24 @@ class tbkView {
     this.#width += toolObj.width;
     this.#view.style.width = `${this.#width}px`;
     this.#count++;
+    var view = this.#view;
 
     if (toolObj instanceof tbkGroup) {
       if (click) toolObj.tools[toolObj.name].click = click;
-      this.tools[toolObj.name].pop = new Pop(toolObj.pop, {preserve: true, position: {x: 2, y: 2}, appendTo: toolObj.pop.firstChild, popupStyle: 'border-radius: 10px;'});
+      this.tools[toolObj.name].pop = new Pop(toolObj.pop, {preserve: true, position: {x: 2, y: 2}, appendTo: toolObj.pop.firstChild, popupStyle: 'border-radius: 10px;'}, null, () => {
+        view.firstChild.style.filter = 'opacity(0)';
+      });
     }
   }
 };
 
 class tbkTool {
-  #color; #name; #tool; #empty_mask;
+  #color; #name; #tool; #empty_mask; #isOn = false;
   get width() { return 40; };
   get name() { return this.#name; };
   get tool() { return this.#tool; };
   get color() { return this.#color; };
+  get isOn() { return this.#isOn; };
   
   // name icon [attach color shadow]
   constructor(obj) {
@@ -625,10 +631,12 @@ class tbkTool {
     this.#tool = tool;
   }
   turnOn() {
-    document.getElementById('tool-' + this.#name).className = 'gt-tool-btn gt-rev';
+    document.getElementById('tool-' + this.#name).className = 'gt-tool gt-rev';
+    this.#isOn = true;
   }
   turnOff() {
-    document.getElementById('tool-' + this.#name).className = 'gt-tool-btn';
+    document.getElementById('tool-' + this.#name).className = 'gt-tool';
+    this.#isOn = false;
   }
   attach(icon) {
     if (!icon || typeof icon != 'string' || !res[icon]) throw new Error(eh + 'When attaching icon: Illegal icon');

@@ -30,7 +30,8 @@
     [
       {"name": "bwMini", "color": "-blue"},
       {"name": "runMini", "color": "-green"},
-      {"name": "addMini", "color": "-orange"}
+      {"name": "addMini", "color": "-orange"},
+      {"name": "historyMini", "color": "-halfR"}
     ]
   ],
   "masks": [

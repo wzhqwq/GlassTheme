@@ -47,8 +47,7 @@ $(function () {
     var Tool = gt.toolbar.Tool, View = gt.toolbar.View, Bar = gt.toolbar.Bar, Group = gt.toolbar.Group;
 
     var isPlay = false;
-    var a1;
-    var b1 = new View('main');
+    var b1 = new View('progMain');
     var d1 = new Group(new Tool({name: 'run', icon: 'run'}));
     d1.append(new Tool({name: 'runBefore', icon: 'run', attach: 'bwMini'}), function () {
 
@@ -78,7 +77,7 @@ $(function () {
     b1.append(d3, function () {
       a1.enter('test');
     });
-    a1 = new Bar(b1);
+    var a1 = new Bar(b1);
     var b2 = new View('debug');
     var c4 = new Tool({name: 'playPause', icon: 'pause'});
     b2.append(c4, function () {
@@ -100,6 +99,60 @@ $(function () {
     });
     a1.append(b2);
 
-    $('.main').append(a1.bar);
+    var b3 = new View('commonMain');
+    b3.append(new Tool({name: 'probCodes', icon: 'storage'}), function (tool) {
+      if (tool.isOn) {
+        tool.turnOff();
+      }
+      else {
+        tool.turnOn();
+      }
+    });
+    var d4 = new Group(new Tool({name: 'addProb', icon: 'add'}));
+    d4.append(new Tool({name: 'importProb', icon: 'import'}), function () {
+
+    });
+    b3.append(d4, function () {
+
+    });
+    var d5 = new Group(new Tool({name: 'saveCode', icon: 'save'}));
+    d5.append(new Tool({name: 'saveAllProb', icon: 'saveAll'}), function () {
+
+    });
+    b3.append(d5, function () {
+
+    });
+    b3.append(new Tool({name: 'codeUndo', icon: 'undo'}), function () {
+
+    });
+    b3.append(new Tool({name: 'codeRedo', icon: 'redo'}), function () {
+
+    });
+    var a2 = new Bar(b3);
+
+    var b4 = new View('otherMain');
+    b4.append(new Tool({name: 'probPanel', icon: 'problem'}), function () {
+      
+    });
+    var d6 = new Group(new Tool({name: 'submitCode', icon: 'send'}));
+    d6.append(new Tool({name: 'submitHistory', icon: 'send', attach: 'historyMini'}), function () {
+
+    });
+    b4.append(d6, function () {
+
+    });
+    b4.append(new Tool({name: 'codeSearch', icon: 'search'}), function () {
+
+    });
+    b4.append(new Tool({name: 'codeHistory', icon: 'tMachine'}), function () {
+
+    });
+    b4.append(new Tool({name: 'groupPanel', icon: 'group'}), function () {
+
+    });
+    var a3 = new Bar(b4);
+    var b5 = new View('searchBar');
+
+    $('#code_tools').append(a2.bar).append(a1.bar).append(a3.bar);
   });
 });

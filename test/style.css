@@ -22,3 +22,12 @@
   box-sizing: border-box;
   bottom: 0;
 }
+.tools {
+  position: fixed;
+  top: 100px;
+  left: 50px;
+}
+.tools > .gt-toolbar {
+  float: left;
+  margin-right: 10px;
+}

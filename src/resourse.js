@@ -63,8 +63,8 @@ gt.loadSpriteMap = function (info, path, path2x) {
                 res[item].mask = {path : maps.length, x : j, y : i, w : w, h : h};
               else
                 unmMask[item] = {path : maps.length, x : j, y : i, w : w, h : h};
+              });
               j += w;
-            });
           });
           i += h;
         });

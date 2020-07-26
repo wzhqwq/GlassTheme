@@ -4,6 +4,7 @@
   padding: 3px;
   margin: 2px;
   cursor: pointer;
+  border-radius: 10px;
 }
 
 .gt-tool-group {
@@ -27,7 +28,6 @@
   background: var(--secC);
 }
 .gt-tool-grouppop .gt-tool {
-  border-radius: 10px;
   transition: background-color .3s;
   margin-bottom: 4px;
 }
@@ -35,10 +35,10 @@
   background-color: var(--priC);
 }
 
-.gt-tool-rev {
+.gt-rev {
   background-color: var(--ccc);
 }
-.gt-tool-rev > .gt-icon {
+.gt-rev .gt-icon {
   background-color: var(--priC);
 }
 
@@ -64,7 +64,6 @@
 }
 
 .gt-toolbar {
-  position: absolute;
   border-radius: 10px;
   height: 40px;
   background-color: var(--priB);
