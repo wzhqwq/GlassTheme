@@ -107,7 +107,7 @@ function cssImage(name) {
     if (retina) style += `-webkit-mask-size: ${maps[o.path].w / 2}px ${maps[o.path].h / 2}px`;
   }
   else {
-    icon.style = `background-image: url(${path}); width: ${o.w}px; height: ${o.h}px;`;
+    style = `background-image: url(${path}); width: ${o.w}px; height: ${o.h}px;`;
     if (o.type) style += `background-position: -${o.x}px -${o.y}px;`;
     if (retina) style += `background-size: ${maps[o.path].w / 2}px ${maps[o.path].h / 2}px`;
   }

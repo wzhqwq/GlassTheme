@@ -17,6 +17,20 @@ function checkPNumP(eh, obj, arr) {
     }
   });
 }
+var mainElement = document.body;
+gt.setMainElement = function (element) {
+  if (!(element instanceof Element)) throw new Error(eh + "please use an element object as main element");
+  mainElement = element;
+}
+var global_click_subscribers = [];
+document.body.addEventListener("click", function (e) {
+  global_click_subscribers.map(function (fn) {
+    fn(e);
+  });
+})
+gt.subscribeClick = function (fn) {
+  global_click_subscribers.push(fn);
+}
 
 // animation utilities, public
 // 已知动画：工具栏移动色块动画、view切换动画(双对象)、工具切换图标(单次动画)

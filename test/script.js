@@ -42,24 +42,40 @@ $(function () {
     });
     $('.main').append(fish.icon);
   });*/
+  gt.setMainElement(document.getElementById("main"));
   Promise.all([gt.loadSpriteMap('icons.json', 'icons.png', 'icons2x.png')]).then(function () {
-    var Tool = gt.toolbar.Tool, View = gt.toolbar.View, Bar = gt.toolbar.Bar;
+    var Tool = gt.toolbar.Tool, View = gt.toolbar.View, Bar = gt.toolbar.Bar, Group = gt.toolbar.Group;
 
     var isPlay = false;
     var a1;
     var b1 = new View('main');
-    var c1 = new Tool({name: 'run', icon: 'run'});
-    var c2 = new Tool({name: 'debug', icon: 'debug'});
-    var c3 = new Tool({name: 'test', icon: 'test'});
-    b1.append(c1, function () {
+    var d1 = new Group(new Tool({name: 'run', icon: 'run'}));
+    d1.append(new Tool({name: 'runBefore', icon: 'run', attach: 'bwMini'}), function () {
+
+    });
+    b1.append(d1, function () {
       a1.enter('run');
     });
-    b1.append(c2, function () {
+    var d2 = new Group(new Tool({name: 'debug', icon: 'debug'}));
+    d2.append(new Tool({name: 'debugBefore', icon: 'debug', attach: 'bwMini'}), function () {
+
+    });
+    d2.append(new Tool({name: 'debugTool', icon: 'eye'}), function () {
+
+    });
+    b1.append(d2, function () {
       isPlay = true;
       c4.change('pause');
       a1.enter('debug', 'debug');
     });
-    b1.append(c3, function () {
+    var d3 = new Group(new Tool({name: 'testRun', icon: 'test', attach: 'runMini'}));
+    d3.append(new Tool({name: 'newTest', icon: 'test', attach: 'addMini'}), function () {
+
+    });
+    d3.append(new Tool({name: 'allTest', icon: 'testSt1', attach: 'testSt2'}), function () {
+
+    });
+    b1.append(d3, function () {
       a1.enter('test');
     });
     a1 = new Bar(b1);

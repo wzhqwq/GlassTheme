@@ -1,15 +1,14 @@
 .gt-tool {
   width: 30px;
   height: 30px;
-  padding: 5px;
+  padding: 3px;
+  margin: 2px;
   cursor: pointer;
 }
 
 .gt-tool-group {
   width: 40px;
   height: 40px;
-  transition: transform .3s ease-out;
-  overflow: hidden;
 }
 .gt-tool-group:after {
   content: "";
@@ -20,59 +19,27 @@
   -webkit-mask-image: url('data:image/svg+xml;utf8,%3C?xml%20version=%221.0%22%20encoding=%22UTF-8%22%20standalone=%22no%22?%3E%3Csvg%20style=%22stroke-linecap:round%22%20xmlns=%22http://www.w3.org/2000/svg%22%20version=%221.1%22%20viewBox=%220%200%205%205%22%3E%3Cpath%20stroke=%22black%22%20stroke-width=%221.5%22%20d=%22M4.0155+1.00558C4.0155+2.64586+2.68579+3.97558+1.0455+3.97558L1.0155+3.97558%22%20fill=%22none%22%20stroke-linecap=%22round%22%20opacity=%221%22%20stroke-linejoin=%22round%22/%3E%3C/svg%3E');
   background-color: var(--halfR);
 }
-.gt-tool-group.gt-acmlt {
-  transition: transform .5s ease-in;
-  transform: scale(.8);
-}
 
 .gt-tool-grouppop {
-  position: absolute;
+  box-sizing: border-box;
+  padding: 2px;
   border-radius: 10px;
+  background: var(--secC);
 }
-@keyframes gt-pop {
-  0% {
-    transform: scale(.8);
-    min-height: 40px;
-    padding: 0;
-    background-color: transparent;
-  }
-  50% {
-    transform: scale(1.05) translate(-5px, -5px);
-    min-height: calc(var(--count) * 45px);
-    padding: 5px;
-    background-color: var(--secB);
-  }
-  100% {
-    transform: scale(1) translate(-5px, -5px);
-  }
-}
-.gt-tool-grouppop.gt-pop {
-  animation: gt-pop .5s ease-out;
-  min-height: calc(var(--count) * 45px - 5px);
-  transform: translate(-5px, -5px);
-  padding: 5px;
-  background-color: var(--secB);
-  backdrop-filter: blur(5px);
-  z-index: 100;
-}
-.gt-tool-grouppop > .gt-tool-btn {
+.gt-tool-grouppop .gt-tool {
   border-radius: 10px;
   transition: background-color .3s;
+  margin-bottom: 4px;
 }
-.gt-tool-grouppop > .gt-tool-btn:hover {
-  background-color: #8882;
+.gt-tool-grouppop .gt-tool:hover {
+  background-color: var(--priC);
 }
 
 .gt-tool-rev {
   background-color: var(--ccc);
 }
-.gt-tool-rev > .gt-icon, .gt-tool-title > div {
+.gt-tool-rev > .gt-icon {
   background-color: var(--priC);
-}
-.gt-tool-title {
-  position: absolute;
-  margin-top: 5px;
-  border-radius: 10px;
 }
 
 .gt-toolbar-view {
@@ -102,6 +69,7 @@
   height: 40px;
   background-color: var(--priB);
   backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
   overflow: hidden;
   transition: width .2s;
 }

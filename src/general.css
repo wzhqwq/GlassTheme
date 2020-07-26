@@ -36,3 +36,31 @@
 .gt-icon, .gt-icon-group {
   transition: filter .3s;
 }
+
+.gt-pop-accmlt {
+  transition: transform .5s ease-in;
+  transform: scale(.8);
+}
+.gt-fix1 {
+  transition-property: top, left, transform, filter;
+  transition-duration: .3s;
+  transition-timing-function: ease-out;
+  transform: scale(.8);
+  position: fixed;
+  z-index: 110;
+}
+.gt-fix2 {
+  transition-property: top, left, width, height, transform, filter;
+  transition-duration: .3s;
+  transition-timing-function: ease-out;
+  filter: opacity(0);
+  transform-origin: 0 0;
+  overflow: hidden;
+  position: fixed;
+  z-index: 100;
+}
+.gt-fix2-inside {
+  transition-property: margin-left, margin-top;
+  transition-duration: .3s;
+  transition-timing-function: ease-out;
+}

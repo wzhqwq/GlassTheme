@@ -24,6 +24,20 @@ function checkPNumP(eh, obj, arr) {
     }
   });
 }
+var mainElement = document.body;
+gt.setMainElement = function (element) {
+  if (!(element instanceof Element)) throw new Error(eh + "please use an element object as main element");
+  mainElement = element;
+}
+var global_click_subscribers = [];
+document.body.addEventListener("click", function (e) {
+  global_click_subscribers.map(function (fn) {
+    fn(e);
+  });
+})
+gt.subscribeClick = function (fn) {
+  global_click_subscribers.push(fn);
+}
 
 // animation utilities, public
 // 已知动画：工具栏移动色块动画、view切换动画(双对象)、工具切换图标(单次动画)
@@ -220,7 +234,7 @@ function cssImage(name) {
     if (retina) style += `-webkit-mask-size: ${maps[o.path].w / 2}px ${maps[o.path].h / 2}px`;
   }
   else {
-    icon.style = `background-image: url(${path}); width: ${o.w}px; height: ${o.h}px;`;
+    style = `background-image: url(${path}); width: ${o.w}px; height: ${o.h}px;`;
     if (o.type) style += `background-position: -${o.x}px -${o.y}px;`;
     if (retina) style += `background-size: ${maps[o.path].w / 2}px ${maps[o.path].h / 2}px`;
   }
@@ -242,121 +256,198 @@ gt.loadLiveSprite = function (name, path, path2x) {
 
   
 }
-/* var tbkBar = function () {
-  var ehh = eh + 'When creating tool bar: ';
-
-  var bar = document.createElement('div');
-  var outer = document.createElement('div');
-  bar.className = 'gt-toolbar';
-  outer.className = 'gt-toolbar-out';
-
-  var els = [];
-  var views = [].slice.apply(arguments);
-  var thisObj = this;
-  views.map(function (view, i) {
-    if (!view instanceof tbkView) {
-      throw new Error(ehh + 'Every view should be an instance of gt.toolbarKit.View');
-    }
-    view.barObj = thisObj;
-    els.push(view.bind(outer));
-    bar.appendChild(els[i]);
-    els[i].style.display = 'none';
-    views[i].aniIn = new gt.aniCtrlr(els[i], {opacity: '0', marginLeft: '20px'}, {opacity: '1', marginLeft: '0'}, 200);
-    views[i].aniOut = new gt.aniCtrlr(els[i], {opacity: '1', marginLeft: '0'}, {opacity: '0', marginLeft: '-20px'}, 200);
-  });
-  els[0].style.display = 'block';
-  
-  outer.appendChild(bar);
-  outer.style.width = bar.style.width = els[0].style.width;
-  var stack = [];
-  var title_el = [], ani1 = [], ani2 = [];
-  stack.push(0);
-  var exitHdl, offset = 0;
-  
-  constP(this, 'enter', function (id) {
-    var eh = eh + 'When entering into another view: ';
-    if (typeof id != 'number' || id <= 0 || id >= views.length) {
-      throw new Error(eh + 'Illegal id');
-    }
-    if (views[id].onenter) {
-      views[id].onenter(this);
-    }
-    var title = arguments[1];
-    var last = stack[stack.length - 1];
-    if (title) {
-      var tool;
-      offset = 40;
-      if (stack.length != 1) {
-        throw new Error(eh + 'You can only create title from main view');
-      }
-      if (typeof title != 'string' || !(tool = views[0].tools['t' + title])) {
-        throw new Error(eh + 'Illegal tool name');
-      }
-      if (!tool instanceof tbkTool) {
-        throw new Error(eh + 'only button-like tool can be used as title');
-      }
-      if (!title_el[title]) {
-        var t = document.createElement('div');
-        t.appendChild(tool.currentIcon.cloneNode(true));
-        t.className = 'gt-tool-title';
-        t.style.backgroundColor = tool.color;
-        var exit = this.exit;
-        t.addEventListener("click", function () {
-          exit();
-        })
-        outer.appendChild(t);
-        title_el[title] = t;
-        ani1[title] = new gt.aniCtrlr(els[0], {opacity: '1', marginLeft: '0'}, {opacity: '0', marginLeft: `-${tool.position * 40}px`}, 200);
-        ani2[title] = new gt.aniCtrlr(t, {opacity: '0', marginLeft: `${tool.position * 40 + 5}px`}, {opacity: '1', marginLeft: '5px'}, 200);
-      }
-      title_el[title].style.display = 'block';
-      els[id].style.display = 'block';
-      
-      var viewAni = new gt.aniCtrlr(els[id], {opacity: '0', marginLeft: `${tool.position * 40 + 40}px`}, {opacity: '1', marginLeft: `40px`}, 200);
-      viewAni.start();
-      ani1[title].start().then(function () {
-        this.style.display = "none";
-      });
-      ani2[title].start();
-      exitHdl = function () {
-        els[0].style.display = "block";
-        viewAni.start(true).then(function () {
-          this.style.display = "none";
-        });
-        ani1[title].start(true);
-        ani2[title].start(true).then(function () {
-          this.style.display = "none";
-        });
-        offset = 0;
-        stack.pop();
-      }
-    }
-    else {
-      views[id].aniIn.start();
-      views[last].aniOut.start();
-      if (stack.length == 1) exitHdl = null;
-    }
-    bar.style.width = outer.style.width = `${parseInt(els[id].style.width) + offset}px`;
-    stack.push(id);
-  });
-  constP(this, 'exit', function () {
-    if (stack.length == 1) return;
-    if (stack.length == 2 && exitHdl)
-      exitHdl();
-    else {
-      views[stack.pop()].aniIn.start(true).then(function () {
-        this.style.display = "none";
-      });
-      var now = stack[stack.length - 1];
-      els[now].style.display = "block";
-      views[now].aniOut.start(true);
-    }
-    bar.style.width = outer.style.width = `${parseInt(els[stack[stack.length - 1]].style.width) + offset}px`;
-  })
-  
-  constP(this, 'bar', outer);
-};
+/*
+场景：toolbar group的弹出（原地，blur）
+    数据点预览（居中，replace）
+    部分应用的预览（原地，replace）
+    用户头像的用户资料预览（原地）
+custom:
+  preserve:Boolean
+  resistance:Object
+  position:Object
+  appendTo:Element
 */
+class Pop {
+  mousemoveHandler;
+  mouseleaveHandler;
+  clickHandler;
+
+  constructor(pop_up, custom, onShow) {
+    if (!pop_up instanceof Element) throw new Error(eh + "wrong pop up element used to create Pop");
+    if (!~pop_up.style.width.search('px') || (!~pop_up.style.height.search('px') && !(~pop_up.style.maxHeight.search('px') && ~pop_up.style.minHeight.search('px'))))
+      throw new Error(eh + "size of pop-up element should be absolute digital");
+    var presrv = null, resis = {};
+    if (custom) {
+      if (custom.resistance) resis = custom.resistance;
+      if (custom.preserve) {
+        presrv = custom.position || {x: 0, y: 0};
+        if (!custom.appendTo) throw new Error(eh + "original element need to be appended to an element in the pop-up element when you choose to preserve it");
+      }
+    }
+
+    var timer1 = 0, timer2 = 0, timer3 = 0, timer_fatal = 0, break_promise = false, now, origin, showing = false;
+    var fix1 = document.createElement("div"), fix2 = document.createElement("div"), fix2inside = document.createElement("div");
+    fix1.className = 'gt-fix1'; fix1.style.display = 'none';
+    mainElement.appendChild(fix1);
+    fix2inside.appendChild(pop_up);
+    fix2inside.className = 'gt-fix2-inside';
+    fix2.appendChild(fix2inside);
+    mainElement.appendChild(fix2);
+    fix2.className = 'gt-fix2'; fix2.style.display = 'none';
+
+    var w1 = 0, h1 = 0, x1, y1;
+    var w2 = parseInt(pop_up.style.width),
+    h21 = parseInt(pop_up.style.height) || parseInt(pop_up.style.minHeight),
+    h22 = parseInt(pop_up.style.height) || parseInt(pop_up.style.maxHeight);
+    var area = {}, fix11, fix12, fix21, fix22, fix23;
+
+    if (resis.left == undefined) resis.left = -(1 << 30);
+    if (resis.right == undefined) resis.right = 1 << 30;
+    if (resis.top == undefined) resis.top = -(1 << 30);
+    if (resis.bottom == undefined) resis.bottom = 1 << 30;
+    if (resis.right - resis.left < w2) throw new Error(eh + "resistance area can not contain pop up element in width");
+    area.x1 = resis.left + w2 / 2; area.x2 = resis.right - w2 / 2;
+    if (resis.bottom - resis.top < h21) throw new Error(eh + "resistance area can not contain pop up element in height");
+    area.y1 = resis.top + h21 / 2; area.y2 = resis.bottom - h21 / 2;
+
+    function get_nearest(a, b, c) {
+      return c < a ? a : (c > b ? b : c)
+    }
+    function calc() {
+      var x, y, h2;
+      fix11 = fix12 = `width: ${w1.toFixed(3)}px; height: ${h1.toFixed(3)}px; `;
+      fix11 += (fix21 = `left: ${x1.toFixed(3)}px; top: ${y1.toFixed(3)}px; `);
+      if (presrv) {
+        let ox = w1 + w2 / 2 - presrv.x, oy = h1 + h21 / 2 - presrv.y;
+        x = get_nearest(area.x1, area.x2, x1 + ox) - ox;
+        y = get_nearest(area.y1, area.y2, y1 + oy) - oy;
+        fix12 += `left: ${x.toFixed(3)}px; top: ${y.toFixed(3)}px; transform: scale(1);`;
+        fix22 = `left: ${(x - presrv.x).toFixed(3)}px; top: ${(y -= presrv.y).toFixed(3)}px; `;
+      }
+      else {
+        x = get_nearest(area.x1, area.x2, x1 + w1 / 2);
+        y = get_nearest(area.y1, area.y2, y1 + h1 / 2);
+        fix12 += `left: ${(x - w1 / 2).toFixed(3)}px; top: ${(y - h1 / 2).toFixed(3)}px; filter: opacity(0); `;
+        fix22 = `left: ${(x - w2 / 2).toFixed(3)}px; top: ${(y - h21 / 2).toFixed(3)}px; `;
+      }
+      fix22 += `width: ${w2.toFixed(3)}px; height: ${(h2 = Math.min(h22, resis.bottom - y + h21 / 2)).toFixed(3)}px; filter: opacity(1);`;
+      if (w2 / w1 < h2 / h1) { // taller, scale using width
+        fix21 += `width: ${w2.toFixed(3)}px; height: ${(h1 * w2 / w1).toFixed(3)}px; transform: scale(${(w1 / w2).toFixed(3)});`;
+        fix23 = `margin-top: -${((h2 - h1 * w2 / w1) / 2).toFixed(3)}px;`;
+        if (!presrv) fix12 += `transform: scale(${(w2 / w1).toFixed(3)});`;
+      }
+      else {
+        fix21 += `width: ${(w1 * h2 / h1).toFixed(3)}px; height: ${h2.toFixed(3)}px; transform: scale(${(h1 / h2).toFixed(3)});`;
+        fix23 = `margin-left: -${((w2 - w1 * h2 / h1) / 2).toFixed(3)}px;`;
+        if (!presrv) fix12 += `transform: scale(${(h2 / h1).toFixed(3)});`;
+      }
+      if (custom && custom.popupStyle) {
+        fix21 += custom.popupStyle;
+        fix22 += custom.popupStyle;
+      }
+    }
+
+    this.mousemoveHandler = function (wrapElement) {
+      if (break_promise || timer3) return;
+      if (timer2) {
+        clearTimeout(timer2); timer2 = 0;
+        wrapElement.className = wrapElement.className.slice(0, -14);
+        break_promise = true;
+        return;
+      }
+      if (timer1) clearTimeout(timer1);
+      timer1 = setTimeout(() => {
+        // 开始蓄力，进行预备运算
+        timer2 = setTimeout(() => {
+          // 蓄力完成，转移元素
+          setTimeout(() => {
+            // fix1开始反弹，fix2预备
+            timer_fatal = setTimeout(() => {
+              // 反弹完成，fix12开始展示
+              timer_fatal = setTimeout(() => {
+                // 展示完成，触发展示事件，可以开始相应的加载
+                timer_fatal = 0;
+                showing = true;
+                if (presrv) {
+                  custom.appendTo.appendChild(origin);
+                  fix1.style = 'z-index: 90; transform: scale(1);';
+                }
+                else
+                  fix1.style = fix12 + 'z-index: 90;';
+                if (onShow) onShow([wrapElement, origin, pop_up]);
+              }, 300);
+              fix1.style = fix12;
+              fix2.style = fix22;
+              fix2inside.style = '';
+            }, 300);
+            fix1.style.transform = 'scale(1)';
+            fix2.style = fix21;
+            fix2inside.style = fix23;
+          }, 0);
+          timer2 = 0;
+          fix1.style = fix11;
+          now = wrapElement;
+          origin = wrapElement.firstChild;
+          fix1.appendChild(origin);
+          wrapElement.className = wrapElement.className.slice(0, -14);
+        }, 500);
+        timer1 = 0;
+        var pos = wrapElement.getBoundingClientRect();
+        if (pos.width != w1 || pos.height != h1 || pos.left != x1 || pos.top != y1)
+          w1 = pos.width; h1 = pos.height; x1 = pos.left; y1 = pos.top;
+          calc();
+        wrapElement.className += ' gt-pop-accmlt';
+      }, 100);
+    };
+    this.mouseleaveHandler = function () {
+      if (timer1) {
+        clearTimeout(timer1);
+        timer1 = 0;
+      }
+      break_promise = false;
+    };
+    this.clickHandler = function (wrapElement) {
+      break_promise = true;
+      if (timer1) {
+        clearTimeout(timer1);
+        timer1 = 0;
+      }
+      if (timer2) {
+        clearTimeout(timer2);
+        timer2 = 0;
+        wrapElement.className = wrapElement.className.slice(0, -14);
+      }
+    };
+    function distruct() {
+      fix1.appendChild(origin);
+      fix1.style = fix11 + 'transform: scale(1);';
+      fix2.style = fix21;
+      timer3 = setTimeout(() => {
+        fix1.style = fix2.style = 'display: none;';
+        now.appendChild(origin);
+        timer3 = 0;
+      }, 300);
+    }
+    fix2.onmouseleave = function () {
+      if (timer3) return;
+      showing = false;
+      if (timer_fatal) {
+        clearTimeout(timer_fatal);
+        timer_fatal = 0;
+        fix1.style = fix2.style = 'display: none;';
+        now.appendChild(origin);
+        return;
+      }
+      distruct();
+    };
+    gt.subscribeClick(function () {
+      if (showing) {
+        distruct();
+        showing = false;
+      }
+    });
+  }
+}
 class tbkOther {
   #width;
   get width() { return this.#width; };
@@ -455,21 +546,31 @@ class tbkView {
       if (!hover) hover = document.getElementById(`viewhover-${vc}`);
       var t = tools[e.target.id.split('-')[2] || '-'];
       if (!t) return;
-      console.log(e.target.id);
       hover.style.filter = 'opacity(.2)';
       hover.style.marginLeft = `${t.l + 2}px`;
       hover.style.width = `${t.tool.width - 4}px`;
     });
     view.addEventListener('mouseleave', function (e) {
       if (!hover) hover = document.getElementById(`viewhover-${vc}`);
-      if (e.target == view)
-        hover.style.filter = 'opacity(0)';
+      hover.style.filter = 'opacity(0)';
     });
     view.addEventListener('click', function (e) {
       if (thisObj.disabled) return;
       var t = tools[e.target.id.split('-').pop()];
-      if (t && t.click) t.click();
-    })
+      if (t) {
+        if (t.pop) t.pop.clickHandler(document.getElementById('tool-' + t.tool.name).parentElement);
+        if (t.click) t.click();
+      }
+    });
+    view.addEventListener('mousemove', function (e) {
+      if (thisObj.disabled) return;
+      var t = tools[e.target.id.split('-')[2] || '-'];
+      if (t && t.pop) t.pop.mousemoveHandler(document.getElementById('tool-' + t.tool.name).parentElement);
+    });
+    view.addEventListener('mouseout', function (e) {
+      var t = tools[e.target.id.split('-')[2] || '-'];
+      if (t && t.pop) t.pop.mouseleaveHandler(document.getElementById('tool-' + t.tool.name).parentElement);
+    });
 
     this.#name = name;
   }
@@ -483,11 +584,16 @@ class tbkView {
     this.#width += toolObj.width;
     this.#view.style.width = `${this.#width}px`;
     this.#count++;
+
+    if (toolObj instanceof tbkGroup) {
+      if (click) toolObj.tools[toolObj.name].click = click;
+      this.tools[toolObj.name].pop = new Pop(toolObj.pop, {preserve: true, position: {x: 2, y: 2}, appendTo: toolObj.pop.firstChild, popupStyle: 'border-radius: 10px;'});
+    }
   }
 };
 
 class tbkTool {
-  #color; #name; #tool;
+  #color; #name; #tool; #empty_mask;
   get width() { return 40; };
   get name() { return this.#name; };
   get tool() { return this.#tool; };
@@ -508,7 +614,8 @@ class tbkTool {
     var tool = `<div id="tool-${obj.name}" style="--ccc: ${color}" class="gt-tool">`;
     if (obj.shadow)
       tool += '<div style="drop-shadow(0 0 1px var(--fullR))">';
-    tool += '<div id="tool-m-' + obj.name + '" style="' + (obj.attach ? cssMask(obj.attach) : `width: ${res[obj.icon].w}px; height: ${res[obj.icon].h}px; position: absolute;`) + `"><div id="tool-a-${obj.name}" style="${cssImage(obj.icon)}" class="gt-icon"></div></div><div id="tool-b-${obj.name}"`;
+    this.#empty_mask = `width: ${res[obj.icon].w}px; height: ${res[obj.icon].h}px; position: absolute;`;
+    tool += '<div id="tool-m-' + obj.name + '" style="' + ((obj.attach && res[obj.attach].mask) ? cssMask(obj.attach) : this.#empty_mask) + `"><div id="tool-a-${obj.name}" style="${cssImage(obj.icon)}" class="gt-icon"></div></div><div id="tool-b-${obj.name}"`;
     if (obj.attach) tool += ` style="${cssImage(obj.attach)}"`;
     tool += ' class="gt-icon"></div></div>';
     if (obj.shadow) tool += '</div>';
@@ -526,7 +633,7 @@ class tbkTool {
   attach(icon) {
     if (!icon || typeof icon != 'string' || !res[icon]) throw new Error(eh + 'When attaching icon: Illegal icon');
     document.getElementById('tool-b-' + this.#name).style = cssImage(icon);
-    if (res[icon].mask) document.getElementById('tool-m-' + this.#name).style = cssMask(icon);
+    document.getElementById('tool-m-' + this.#name).style = res[icon].mask ? cssMask(icon) : this.#empty_mask;
   }
   change(icon) {
     if (!icon || typeof icon != 'string' || !res[icon]) throw new Error(eh + 'When changing icon: Illegal icon');
@@ -534,74 +641,44 @@ class tbkTool {
   }
 };
 
-var tbkGroup = function () {
-  var ehh = eh + 'When creating tool group: ';
-  var tools = [].slice.call(arguments);
-  var els = [];
-  
-  var group = document.createElement('div');
-  var pop = document.createElement('div');
-  group.className = 'gt-tool-group';
-  pop.className = 'gt-tool-grouppop';
-  pop.style.display = 'none';
-  
-  tools.map(function (item) {
-    if (!item instanceof tbkTool) {
-      throw new Error(ehh + 'Every tool should be an instance of gt.toolbarKit.BtnTool');
-    }
-    pop.appendChild(item.tool);
-    els[item.name] = item.tool;
-  });
-  
-  var t;
-  var first = pop.firstChild;
-  group.appendChild(first);
-  
-  group.addEventListener('mouseenter', function() {
-    t = setTimeout(function () {
-      group.className = 'gt-tool-group gt-acmlt';
-      t = setTimeout(function () {
-        pop.insertBefore(first, pop.firstChild);
-        pop.style.display = 'block';
-        pop.className = 'gt-tool-grouppop gt-pop';
-        group.className = 'gt-tool-group';
-      }, 500);
-    }, 200);
-  });
-  
-  var f0 = function () {
-    if (t) {
-      clearTimeout(t);
-      t = 0;
-      group.className = 'gt-tool-group';
-    }
+class tbkGroup {
+  tools = {};
+  #tool = '<div class="gt-tool-group">';
+  #pop = document.createElement("div");
+  #count = 0;
+  #name;
+  get tool() { return this.#tool; };
+  get pop() {
+    this.#pop.style.height = `${(this.#count + 1) * 40 + 4}px`;
+    return this.#pop;
   };
-  group.addEventListener('mouseleave', f0);
-  group.addEventListener('click', f0);
-  var thisObj = this;
-  var f1 = function () {
-    pop.className = 'gt-tool-grouppop';
-    pop.style.display = 'none';
-    group.appendChild(first);
-    thisObj.viewObj.view.dispatchEvent(new MouseEvent('mouseleave'));
-  };
-  pop.addEventListener('mouseleave', f1);
-  pop.addEventListener('click', f1);
+  get count() { return this.#count; };
+  get width() { return 40; };
+  get name() { return this.#name; };
+
+  constructor(firstTool) {
+    if (!(firstTool instanceof tbkTool)) throw new Error(eh + "please use Tool to create Group");
+    this.tools[firstTool.name] = {tool: firstTool};
+    this.#tool += firstTool.tool + '</div>';
+    this.#pop.className = 'gt-tool-grouppop';
+    this.#pop.style.width = '44px';
+    this.#pop.innerHTML = '<div style="width: 40px; height: 40px; margin-bottom: -2px;"></div>'
+    this.#name = firstTool.name;
+    
+    var tools = this.tools;
+    this.#pop.addEventListener('click', function (e) {
+      var t = tools[e.target.id.split('-').pop()];
+      if (t) if (t.click) t.click();
+    });
+  }
   
-  constP(this, 'elements', els);
-  constP(this, 'tools', tools);
-  constP(this, 'tool', group);
-  constP(this, 'name', '[group]');
-  constP(this, 'barReady', function(outer) {
-    outer.appendChild(pop);
-    var pos = thisObj.position;
-    pop.style.marginLeft = `${pos * 40}px`;
-    tools.map(function (tool) {
-      tool.position = pos;
-    })
-  });
-};
-// constP(tbkGroup.prototype, 'width', 40);
+  append(tool, click) {
+    if (!(tool instanceof tbkTool)) throw new Error(eh + "please append Tool to Group");
+    this.tools[tool.name] = {tool: tool, click: click};
+    this.#pop.innerHTML += tool.tool;
+    this.#count++;
+  }
+}
 
 gt.toolbar = {
   Bar: tbkBar,

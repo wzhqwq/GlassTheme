@@ -1,118 +1,3 @@
-/* var tbkBar = function () {
-  var ehh = eh + 'When creating tool bar: ';
-
-  var bar = document.createElement('div');
-  var outer = document.createElement('div');
-  bar.className = 'gt-toolbar';
-  outer.className = 'gt-toolbar-out';
-
-  var els = [];
-  var views = [].slice.apply(arguments);
-  var thisObj = this;
-  views.map(function (view, i) {
-    if (!view instanceof tbkView) {
-      throw new Error(ehh + 'Every view should be an instance of gt.toolbarKit.View');
-    }
-    view.barObj = thisObj;
-    els.push(view.bind(outer));
-    bar.appendChild(els[i]);
-    els[i].style.display = 'none';
-    views[i].aniIn = new gt.aniCtrlr(els[i], {opacity: '0', marginLeft: '20px'}, {opacity: '1', marginLeft: '0'}, 200);
-    views[i].aniOut = new gt.aniCtrlr(els[i], {opacity: '1', marginLeft: '0'}, {opacity: '0', marginLeft: '-20px'}, 200);
-  });
-  els[0].style.display = 'block';
-  
-  outer.appendChild(bar);
-  outer.style.width = bar.style.width = els[0].style.width;
-  var stack = [];
-  var title_el = [], ani1 = [], ani2 = [];
-  stack.push(0);
-  var exitHdl, offset = 0;
-  
-  constP(this, 'enter', function (id) {
-    var eh = eh + 'When entering into another view: ';
-    if (typeof id != 'number' || id <= 0 || id >= views.length) {
-      throw new Error(eh + 'Illegal id');
-    }
-    if (views[id].onenter) {
-      views[id].onenter(this);
-    }
-    var title = arguments[1];
-    var last = stack[stack.length - 1];
-    if (title) {
-      var tool;
-      offset = 40;
-      if (stack.length != 1) {
-        throw new Error(eh + 'You can only create title from main view');
-      }
-      if (typeof title != 'string' || !(tool = views[0].tools['t' + title])) {
-        throw new Error(eh + 'Illegal tool name');
-      }
-      if (!tool instanceof tbkTool) {
-        throw new Error(eh + 'only button-like tool can be used as title');
-      }
-      if (!title_el[title]) {
-        var t = document.createElement('div');
-        t.appendChild(tool.currentIcon.cloneNode(true));
-        t.className = 'gt-tool-title';
-        t.style.backgroundColor = tool.color;
-        var exit = this.exit;
-        t.addEventListener("click", function () {
-          exit();
-        })
-        outer.appendChild(t);
-        title_el[title] = t;
-        ani1[title] = new gt.aniCtrlr(els[0], {opacity: '1', marginLeft: '0'}, {opacity: '0', marginLeft: `-${tool.position * 40}px`}, 200);
-        ani2[title] = new gt.aniCtrlr(t, {opacity: '0', marginLeft: `${tool.position * 40 + 5}px`}, {opacity: '1', marginLeft: '5px'}, 200);
-      }
-      title_el[title].style.display = 'block';
-      els[id].style.display = 'block';
-      
-      var viewAni = new gt.aniCtrlr(els[id], {opacity: '0', marginLeft: `${tool.position * 40 + 40}px`}, {opacity: '1', marginLeft: `40px`}, 200);
-      viewAni.start();
-      ani1[title].start().then(function () {
-        this.style.display = "none";
-      });
-      ani2[title].start();
-      exitHdl = function () {
-        els[0].style.display = "block";
-        viewAni.start(true).then(function () {
-          this.style.display = "none";
-        });
-        ani1[title].start(true);
-        ani2[title].start(true).then(function () {
-          this.style.display = "none";
-        });
-        offset = 0;
-        stack.pop();
-      }
-    }
-    else {
-      views[id].aniIn.start();
-      views[last].aniOut.start();
-      if (stack.length == 1) exitHdl = null;
-    }
-    bar.style.width = outer.style.width = `${parseInt(els[id].style.width) + offset}px`;
-    stack.push(id);
-  });
-  constP(this, 'exit', function () {
-    if (stack.length == 1) return;
-    if (stack.length == 2 && exitHdl)
-      exitHdl();
-    else {
-      views[stack.pop()].aniIn.start(true).then(function () {
-        this.style.display = "none";
-      });
-      var now = stack[stack.length - 1];
-      els[now].style.display = "block";
-      views[now].aniOut.start(true);
-    }
-    bar.style.width = outer.style.width = `${parseInt(els[stack[stack.length - 1]].style.width) + offset}px`;
-  })
-  
-  constP(this, 'bar', outer);
-};
-*/
 class tbkOther {
   #width;
   get width() { return this.#width; };
@@ -211,21 +96,31 @@ class tbkView {
       if (!hover) hover = document.getElementById(`viewhover-${vc}`);
       var t = tools[e.target.id.split('-')[2] || '-'];
       if (!t) return;
-      console.log(e.target.id);
       hover.style.filter = 'opacity(.2)';
       hover.style.marginLeft = `${t.l + 2}px`;
       hover.style.width = `${t.tool.width - 4}px`;
     });
     view.addEventListener('mouseleave', function (e) {
       if (!hover) hover = document.getElementById(`viewhover-${vc}`);
-      if (e.target == view)
-        hover.style.filter = 'opacity(0)';
+      hover.style.filter = 'opacity(0)';
     });
     view.addEventListener('click', function (e) {
       if (thisObj.disabled) return;
       var t = tools[e.target.id.split('-').pop()];
-      if (t && t.click) t.click();
-    })
+      if (t) {
+        if (t.pop) t.pop.clickHandler(document.getElementById('tool-' + t.tool.name).parentElement);
+        if (t.click) t.click();
+      }
+    });
+    view.addEventListener('mousemove', function (e) {
+      if (thisObj.disabled) return;
+      var t = tools[e.target.id.split('-')[2] || '-'];
+      if (t && t.pop) t.pop.mousemoveHandler(document.getElementById('tool-' + t.tool.name).parentElement);
+    });
+    view.addEventListener('mouseout', function (e) {
+      var t = tools[e.target.id.split('-')[2] || '-'];
+      if (t && t.pop) t.pop.mouseleaveHandler(document.getElementById('tool-' + t.tool.name).parentElement);
+    });
 
     this.#name = name;
   }
@@ -239,11 +134,16 @@ class tbkView {
     this.#width += toolObj.width;
     this.#view.style.width = `${this.#width}px`;
     this.#count++;
+
+    if (toolObj instanceof tbkGroup) {
+      if (click) toolObj.tools[toolObj.name].click = click;
+      this.tools[toolObj.name].pop = new Pop(toolObj.pop, {preserve: true, position: {x: 2, y: 2}, appendTo: toolObj.pop.firstChild, popupStyle: 'border-radius: 10px;'});
+    }
   }
 };
 
 class tbkTool {
-  #color; #name; #tool;
+  #color; #name; #tool; #empty_mask;
   get width() { return 40; };
   get name() { return this.#name; };
   get tool() { return this.#tool; };
@@ -264,7 +164,8 @@ class tbkTool {
     var tool = `<div id="tool-${obj.name}" style="--ccc: ${color}" class="gt-tool">`;
     if (obj.shadow)
       tool += '<div style="drop-shadow(0 0 1px var(--fullR))">';
-    tool += '<div id="tool-m-' + obj.name + '" style="' + (obj.attach ? cssMask(obj.attach) : `width: ${res[obj.icon].w}px; height: ${res[obj.icon].h}px; position: absolute;`) + `"><div id="tool-a-${obj.name}" style="${cssImage(obj.icon)}" class="gt-icon"></div></div><div id="tool-b-${obj.name}"`;
+    this.#empty_mask = `width: ${res[obj.icon].w}px; height: ${res[obj.icon].h}px; position: absolute;`;
+    tool += '<div id="tool-m-' + obj.name + '" style="' + ((obj.attach && res[obj.attach].mask) ? cssMask(obj.attach) : this.#empty_mask) + `"><div id="tool-a-${obj.name}" style="${cssImage(obj.icon)}" class="gt-icon"></div></div><div id="tool-b-${obj.name}"`;
     if (obj.attach) tool += ` style="${cssImage(obj.attach)}"`;
     tool += ' class="gt-icon"></div></div>';
     if (obj.shadow) tool += '</div>';
@@ -282,7 +183,7 @@ class tbkTool {
   attach(icon) {
     if (!icon || typeof icon != 'string' || !res[icon]) throw new Error(eh + 'When attaching icon: Illegal icon');
     document.getElementById('tool-b-' + this.#name).style = cssImage(icon);
-    if (res[icon].mask) document.getElementById('tool-m-' + this.#name).style = cssMask(icon);
+    document.getElementById('tool-m-' + this.#name).style = res[icon].mask ? cssMask(icon) : this.#empty_mask;
   }
   change(icon) {
     if (!icon || typeof icon != 'string' || !res[icon]) throw new Error(eh + 'When changing icon: Illegal icon');
@@ -290,74 +191,44 @@ class tbkTool {
   }
 };
 
-var tbkGroup = function () {
-  var ehh = eh + 'When creating tool group: ';
-  var tools = [].slice.call(arguments);
-  var els = [];
-  
-  var group = document.createElement('div');
-  var pop = document.createElement('div');
-  group.className = 'gt-tool-group';
-  pop.className = 'gt-tool-grouppop';
-  pop.style.display = 'none';
-  
-  tools.map(function (item) {
-    if (!item instanceof tbkTool) {
-      throw new Error(ehh + 'Every tool should be an instance of gt.toolbarKit.BtnTool');
-    }
-    pop.appendChild(item.tool);
-    els[item.name] = item.tool;
-  });
-  
-  var t;
-  var first = pop.firstChild;
-  group.appendChild(first);
-  
-  group.addEventListener('mouseenter', function() {
-    t = setTimeout(function () {
-      group.className = 'gt-tool-group gt-acmlt';
-      t = setTimeout(function () {
-        pop.insertBefore(first, pop.firstChild);
-        pop.style.display = 'block';
-        pop.className = 'gt-tool-grouppop gt-pop';
-        group.className = 'gt-tool-group';
-      }, 500);
-    }, 200);
-  });
-  
-  var f0 = function () {
-    if (t) {
-      clearTimeout(t);
-      t = 0;
-      group.className = 'gt-tool-group';
-    }
+class tbkGroup {
+  tools = {};
+  #tool = '<div class="gt-tool-group">';
+  #pop = document.createElement("div");
+  #count = 0;
+  #name;
+  get tool() { return this.#tool; };
+  get pop() {
+    this.#pop.style.height = `${(this.#count + 1) * 40 + 4}px`;
+    return this.#pop;
   };
-  group.addEventListener('mouseleave', f0);
-  group.addEventListener('click', f0);
-  var thisObj = this;
-  var f1 = function () {
-    pop.className = 'gt-tool-grouppop';
-    pop.style.display = 'none';
-    group.appendChild(first);
-    thisObj.viewObj.view.dispatchEvent(new MouseEvent('mouseleave'));
-  };
-  pop.addEventListener('mouseleave', f1);
-  pop.addEventListener('click', f1);
+  get count() { return this.#count; };
+  get width() { return 40; };
+  get name() { return this.#name; };
+
+  constructor(firstTool) {
+    if (!(firstTool instanceof tbkTool)) throw new Error(eh + "please use Tool to create Group");
+    this.tools[firstTool.name] = {tool: firstTool};
+    this.#tool += firstTool.tool + '</div>';
+    this.#pop.className = 'gt-tool-grouppop';
+    this.#pop.style.width = '44px';
+    this.#pop.innerHTML = '<div style="width: 40px; height: 40px; margin-bottom: -2px;"></div>'
+    this.#name = firstTool.name;
+    
+    var tools = this.tools;
+    this.#pop.addEventListener('click', function (e) {
+      var t = tools[e.target.id.split('-').pop()];
+      if (t) if (t.click) t.click();
+    });
+  }
   
-  constP(this, 'elements', els);
-  constP(this, 'tools', tools);
-  constP(this, 'tool', group);
-  constP(this, 'name', '[group]');
-  constP(this, 'barReady', function(outer) {
-    outer.appendChild(pop);
-    var pos = thisObj.position;
-    pop.style.marginLeft = `${pos * 40}px`;
-    tools.map(function (tool) {
-      tool.position = pos;
-    })
-  });
-};
-// constP(tbkGroup.prototype, 'width', 40);
+  append(tool, click) {
+    if (!(tool instanceof tbkTool)) throw new Error(eh + "please append Tool to Group");
+    this.tools[tool.name] = {tool: tool, click: click};
+    this.#pop.innerHTML += tool.tool;
+    this.#count++;
+  }
+}
 
 gt.toolbar = {
   Bar: tbkBar,
