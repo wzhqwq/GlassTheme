@@ -6,6 +6,16 @@
   cursor: pointer;
   border-radius: 10px;
 }
+.gt-toolbar-title > .gt-tool {
+  cursor: auto;
+}
+
+.gt-tool:focus,
+.gt-tool-group:focus,
+.gt-tool-grouppop .gt-tool:focus {
+  outline-color: var(--halfR);
+  outline-style: dashed;
+}
 
 .gt-tool-group {
   width: 40px;
@@ -14,11 +24,17 @@
 .gt-tool-group:after {
   content: "";
   display: block;
-  margin: -9px 31px;
+  position: absolute;
+  margin-left: 31px;
+  top: 31px;
   width: 5px;
   height: 5px;
   -webkit-mask-image: url('data:image/svg+xml;utf8,%3C?xml%20version=%221.0%22%20encoding=%22UTF-8%22%20standalone=%22no%22?%3E%3Csvg%20style=%22stroke-linecap:round%22%20xmlns=%22http://www.w3.org/2000/svg%22%20version=%221.1%22%20viewBox=%220%200%205%205%22%3E%3Cpath%20stroke=%22black%22%20stroke-width=%221.5%22%20d=%22M4.0155+1.00558C4.0155+2.64586+2.68579+3.97558+1.0455+3.97558L1.0155+3.97558%22%20fill=%22none%22%20stroke-linecap=%22round%22%20opacity=%221%22%20stroke-linejoin=%22round%22/%3E%3C/svg%3E');
   background-color: var(--halfR);
+  transition: transform .2s ease-out;
+}
+.gt-tool-group:focus:after {
+  transform: scale(2);
 }
 
 .gt-tool-grouppop {
@@ -33,6 +49,7 @@
 }
 .gt-tool-grouppop .gt-tool:hover {
   background-color: var(--priC);
+  outline: none;
 }
 
 .gt-rev {
@@ -45,10 +62,20 @@
 .gt-toolbar-view {
   height: 40px;
   position: absolute;
-  overflow: hidden;
+  overflow: visible;
   transition-property: filter, margin-left, width, background-color;
   transition-duration: .2s;
   transition-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
+  z-index: 0;
+}
+.gt-toolbar-title {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  display: none;
+  z-index: 1;
+  border-radius: 10px 0 0 10px;
+  background: linear-gradient(to right, var(--priC) 95%, #0005);
 }
 .gt-toolbar-hover {
   position: absolute;
@@ -69,10 +96,10 @@
   background-color: var(--priB);
   backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(5px);
-  overflow: hidden;
+  overflow: visible;
   transition: width .2s;
 }
-.gt-toolbar-view > div {
+.gt-toolbar-view > * {
   display: inline-block;
 }
 .gt-toolbar-out {

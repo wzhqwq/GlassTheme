@@ -46,7 +46,7 @@
   transition-duration: .3s;
   transition-timing-function: ease-out;
   transform: scale(.8);
-  position: fixed;
+  position: absolute;
   z-index: 110;
 }
 .gt-fix2 {
@@ -56,11 +56,15 @@
   filter: opacity(0);
   transform-origin: 0 0;
   overflow: hidden;
-  position: fixed;
+  position: absolute;
   z-index: 100;
 }
 .gt-fix2-inside {
   transition-property: margin-left, margin-top;
   transition-duration: .3s;
   transition-timing-function: ease-out;
+}
+
+.gt-relative-position {
+  position: relative;
 }

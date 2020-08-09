@@ -12,6 +12,7 @@ class tbkBar {
   #count = 0;
   #bar = document.createElement("div");
   #stack = [];
+  #title = document.createElement("div");
   get count() { return this.#count; };
   get bar() { return this.#bar; };
 
@@ -21,6 +22,8 @@ class tbkBar {
     this.views[view.name] = view;
     var e = view.view;
     e.style.zIndex = '0';
+    this.#title.className = 'gt-toolbar-title';
+    this.#bar.appendChild(this.#title);
     this.#bar.appendChild(e);
     this.#bar.className = 'gt-toolbar';
     this.#bar.style.width = `${view.width}px`;
@@ -35,40 +38,67 @@ class tbkBar {
       throw new Error(eh + 'Please append gt.toolbar.View to Bar');
     this.views[view.name] = view;
     var e = view.view;
-    e.style = `width: ${view.width}px; filter: opacity(0); z-index: -1; margin-left: 20px`;
+    e.style = `width: ${view.width}px; filter: opacity(0); z-index: -1; margin-left: 20px; display: none;`;
     this.#bar.appendChild(e);
   }
   enter(viewName, titleTool) {
-    var view = this.views[viewName], title, now = this.#stack.top();
+    var view = this.views[viewName], now = this.#stack.top();
     var ehh = eh + 'when entering into another view:';
     if (!view) throw new Error(ehh + 'inexistent view');
+    if (titleTool && this.#title.innerHTML) throw new Error(ehh + 'title has been set already');
+    var bar = this.#bar, stack = this.#stack, titleWrap = this.#title;
 
+    bar.style.overflow = 'hidden';
+    view.view.style.display = 'block';
     if (titleTool) {
-      title = now.tools[titleTool];
+      let title = now.tools[titleTool];
       if (!title) throw new Error(ehh + 'inexistent tool');
-      if (title.tool.width != 40) throw new Error(ehh + 'illegal tool');
-
-      now.view.style = `width: ${title.l + 40}px; z-index: ${this.#stack.length}; margin-left: -${title.l}px; background-color: var(--priC)`;
-      now.disabled = true;
-      this.#stack.push(view);
-      view.view.style = `width: ${view.width}px; z-index: ${this.#stack.length}; margin-left: 40px; box-shadow: 1px 0 4px 2px var(--bgC)`;
-      this.#bar.style.width = `${view.width + 40}px`;
+      if (!(title.tool instanceof tbkTool || title.tool instanceof tbkGroup)) throw new Error(ehh + 'illegal tool');
+      
+      let content = title.tool.tool
+      titleWrap.innerHTML = (title.tool instanceof tbkTool ? content : content.slice(content.indexOf('">') + 2, -6)).replace(/ (id|title|tabindex)="[^\s]*/g, '');
+      setTimeout(() => {
+        now.view.style = `width: ${title.l + 40}px; z-index: ${stack.length}; margin-left: -${title.l}px; overflow: hidden;`;
+        // now.disabled = true;
+        stack.push(view);
+        view.view.style = `width: ${view.width}px; z-index: ${stack.length}; margin-left: 40px;`;
+        bar.style.width = `${view.width + 40}px`;
+      }, 0);
     }
     else {
-      now.view.style = `width: ${now.view.width}px; filter: opacity(0); z-index: ${this.#stack.length}; margin-left: -20px`;
-      this.#stack.push(view);
-      view.view.style = `width: ${view.width}px; z-index: ${this.#stack.length}; margin-left: 0`;
-      this.#bar.style.width = `${view.width}px`;
+      setTimeout(() => {
+        now.view.style = `width: ${now.view.width}px; filter: opacity(0); z-index: ${stack.length}; margin-left: -20px`;
+        stack.push(view);
+        view.view.style = `width: ${view.width}px; z-index: ${stack.length}; margin-left: 0`;
+        bar.style.width = `${view.width}px`;
+      }, 0);
     }
+    setTimeout(() => {
+      bar.style.overflow = 'visible';
+      now.view.style.display = 'none';
+      if (titleTool) titleWrap.style = 'display: block';
+    }, 300);
   }
   exit() {
     if (!this.#stack.length) return;
-    var now = this.#stack.pop();
+    var bar = this.#bar, stack = this.#stack, title = this.#title;
+    var now = stack.pop(), esc = stack.top();
+    if (title.innerHTML) {
+      title.style.display = 'none';
+      title.innerHTML = '';
+    }
     now.view.style = `width: ${now.width}px; filter: opacity(0); z-index: -1; margin-left: 20px`;
-    now = this.#stack.top();
-    now.view.style = `width: ${now.width}px; z-index: ${this.#stack.length}; margin-left: 0`;
-    now.disabled = false;
-    this.#bar.style.width = `${now.width}px`;
+    esc.view.style.display = 'block';
+    bar.style.overflow = 'hidden';
+    setTimeout(() => {
+      esc.view.style = `width: ${esc.width}px; z-index: ${stack.length}; margin-left: 0`;
+    }, 0);
+    // next.disabled = false;
+    bar.style = `width: ${esc.width}px; overflow: hidden;`;
+    setTimeout(() => {
+      esc.view.style.overflow = bar.style.overflow = 'visible';
+      now.view.style.display = 'none';
+    }, 300)
   }
 }
 
@@ -76,7 +106,7 @@ class tbkBar {
 var viewC = 0;
 class tbkView {
   tools = {};
-  disabled = false;
+  // disabled = false;
   #count = 0;
   #width = 0;
   #view = document.createElement("div");
@@ -92,7 +122,7 @@ class tbkView {
     var vc = viewC++;
     view.innerHTML += `<div class="gt-toolbar-hover"></div>`;
     view.addEventListener('mouseover', function (e) {
-      if (thisObj.disabled) return;
+      // if (thisObj.disabled) return;
       if (!hover) hover = view.firstChild;
       var t = tools[e.target.id.split('-')[2] || '-'];
       if (!t) return;
@@ -105,7 +135,7 @@ class tbkView {
       hover.style.filter = 'opacity(0)';
     });
     view.addEventListener('click', function (e) {
-      if (thisObj.disabled) return;
+      // if (thisObj.disabled) return;
       var t = tools[e.target.id.split('-').pop()];
       if (t) {
         if (t.pop) t.pop.clickHandler(document.getElementById('tool-' + t.tool.name).parentElement);
@@ -113,13 +143,18 @@ class tbkView {
       }
     });
     view.addEventListener('mousemove', function (e) {
-      if (thisObj.disabled) return;
+      // if (thisObj.disabled) return;
       var t = tools[e.target.id.split('-')[2] || '-'];
       if (t && t.pop) t.pop.mousemoveHandler(document.getElementById('tool-' + t.tool.name).parentElement);
     });
     view.addEventListener('mouseout', function (e) {
       var t = tools[e.target.id.split('-')[2] || '-'];
       if (t && t.pop) t.pop.mouseleaveHandler(document.getElementById('tool-' + t.tool.name).parentElement);
+    });
+    view.addEventListener('focus', function (e) {
+      e.preventDefault();
+      (focus_now = e.target.children[1]).focus();
+      console.log(focus_now);
     });
 
     this.#name = name;
@@ -138,9 +173,12 @@ class tbkView {
 
     if (toolObj instanceof tbkGroup) {
       if (click) toolObj.tools[toolObj.name].click = click;
-      this.tools[toolObj.name].pop = new Pop(toolObj.pop, {preserve: true, position: {x: 2, y: 2}, appendTo: toolObj.pop.firstChild, popupStyle: 'border-radius: 10px;'}, null, () => {
+      let trigger = (this.tools[toolObj.name].pop = new Pop(toolObj.pop, {preserve: true, position: {x: 2, y: 2}, appendTo: toolObj.pop.firstChild, popupStyle: 'border-radius: 10px;'}, null, () => {
         view.firstChild.style.filter = 'opacity(0)';
-      });
+      })).tabEnterHandler;
+      tabNavTriggers[toolObj.tool.match(/(?<=id=")[^"]+/)[0]] = function (el) {
+        trigger(el);
+      }
     }
   }
 };
@@ -153,7 +191,7 @@ class tbkTool {
   get color() { return this.#color; };
   get isOn() { return this.#isOn; };
   
-  // name icon [attach color shadow]
+  // name icon [attach color shadow title]
   constructor(obj) {
     var ehh = eh + 'When creating Tool: ';
     if (!obj || typeof obj != 'object') throw new Error(ehh + 'Illegal parameter.');
@@ -165,7 +203,9 @@ class tbkTool {
     if (color[0] == '-') {
       color = `var(-${color})`;
     }
-    var tool = `<div id="tool-${obj.name}" style="--ccc: ${color}" class="gt-tool">`;
+    var tool = `<div id="tool-${obj.name}" style="--ccc: ${color}" class="gt-tool"`;
+    if (obj.title) tool += ` title="${obj.title}"`;
+    tool += ' tabindex="0" role="button">';
     if (obj.shadow)
       tool += '<div style="drop-shadow(0 0 1px var(--fullR))">';
     this.#empty_mask = `width: ${res[obj.icon].w}px; height: ${res[obj.icon].h}px; position: absolute;`;
@@ -197,9 +237,10 @@ class tbkTool {
   }
 };
 
+var tbk_group_cnt = 0;
 class tbkGroup {
   tools = {};
-  #tool = '<div class="gt-tool-group">';
+  #tool = '<div class="gt-tool-group" tabindex="0" id="gt-tgroup-';
   #pop = document.createElement("div");
   #count = 0;
   #name;
@@ -215,7 +256,7 @@ class tbkGroup {
   constructor(firstTool) {
     if (!(firstTool instanceof tbkTool)) throw new Error(eh + "please use Tool to create Group");
     this.tools[firstTool.name] = {tool: firstTool};
-    this.#tool += firstTool.tool + '</div>';
+    this.#tool += `${++tbk_group_cnt}">${firstTool.tool}</div>`;
     this.#pop.className = 'gt-tool-grouppop';
     this.#pop.style.width = '44px';
     this.#pop.innerHTML = '<div style="width: 40px; height: 40px; margin-bottom: -2px;"></div>'
@@ -225,6 +266,7 @@ class tbkGroup {
     this.#pop.addEventListener('click', function (e) {
       var t = tools[e.target.id.split('-').pop()];
       if (t) if (t.click) t.click();
+      e.stopPropagation();
     });
   }
   

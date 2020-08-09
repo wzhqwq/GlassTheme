@@ -34,10 +34,10 @@ document.body.addEventListener("click", function (e) {
   global_click_subscribers.map(function (fn) {
     fn(e);
   });
-})
+}, true);
 gt.subscribeClick = function (fn) {
   global_click_subscribers.push(fn);
-}
+};
 
 // animation utilities, public
 // 已知动画：工具栏移动色块动画、view切换动画(双对象)、工具切换图标(单次动画)
@@ -124,7 +124,23 @@ gt.subscribeClick = function (fn) {
       this.element.style[i] = this.t[i];
   });
 })(gt, eh); */
-
+// tab导航控制
+var tabNavTriggers = {};
+window.addEventListener('keydown', function (e) {
+  var focus = document.activeElement;
+  if (!focus || focus.tagName == 'INPUT') return;
+  switch (e.keyCode) {
+    case 13: case 32:
+      let fn;
+      if (focus.id && (fn = tabNavTriggers[focus.id]))
+        fn(focus);
+      else
+        focus.click();
+      break;
+    case 9: // tab
+  }
+  console.log(e.keyCode);
+});
 var res = {};
 var maps = [];
 var unmMask = {};
@@ -267,6 +283,11 @@ custom:
   position:Object
   appendTo:Element
 */
+var fix1 = document.createElement("div");
+fix1.className = 'gt-fix1';
+fix1.style.display = 'none';
+var pop_on_show = null;
+
 class Pop {
   mousemoveHandler;
   mouseleaveHandler;
@@ -286,16 +307,17 @@ class Pop {
     }
 
     var timer1 = 0, timer2 = 0, timer3 = 0, timer_fatal = 0, break_promise = false, now, origin, showing = false;
-    var fix1 = document.createElement("div"), fix2 = document.createElement("div"), fix2inside = document.createElement("div");
-    fix1.className = 'gt-fix1'; fix1.style.display = 'none';
+    var fix2 = document.createElement("div"), fix2inside = document.createElement("div");
     mainElement.appendChild(fix1);
     fix2inside.appendChild(pop_up);
     fix2inside.className = 'gt-fix2-inside';
     fix2.appendChild(fix2inside);
-    mainElement.appendChild(fix2);
-    fix2.className = 'gt-fix2'; fix2.style.display = 'none';
+    fix2.className = 'gt-fix2';
+    var fix2Pos = document.createElement("div");
+    fix2Pos.className = 'gt-relative-position';
+    fix2Pos.appendChild(fix2);
 
-    var w1 = 0, h1 = 0, x1, y1;
+    var w1 = 0, h1 = 0, x1, y1, x2, y2;
     var w2 = parseInt(pop_up.style.width),
     h21 = parseInt(pop_up.style.height) || parseInt(pop_up.style.minHeight),
     h22 = parseInt(pop_up.style.height) || parseInt(pop_up.style.maxHeight);
@@ -316,19 +338,20 @@ class Pop {
     function calc() {
       var x, y, h2;
       fix11 = fix12 = `width: ${w1.toFixed(3)}px; height: ${h1.toFixed(3)}px; `;
-      fix11 += (fix21 = `left: ${x1.toFixed(3)}px; top: ${y1.toFixed(3)}px; `);
+      fix11 += `left: ${x1.toFixed(3)}px; top: ${y1.toFixed(3)}px; `;
+      fix21 = '';
       if (presrv) {
         let ox = w1 + w2 / 2 - presrv.x, oy = h1 + h21 / 2 - presrv.y;
         x = get_nearest(area.x1, area.x2, x1 + ox) - ox;
         y = get_nearest(area.y1, area.y2, y1 + oy) - oy;
         fix12 += `left: ${x.toFixed(3)}px; top: ${y.toFixed(3)}px; transform: scale(1);`;
-        fix22 = `left: ${(x - presrv.x).toFixed(3)}px; top: ${(y -= presrv.y).toFixed(3)}px; `;
+        fix22 = `left: ${(x - presrv.x - x1).toFixed(3)}px; top: ${((y -= presrv.y) - y1).toFixed(3)}px; `;
       }
       else {
         x = get_nearest(area.x1, area.x2, x1 + w1 / 2);
         y = get_nearest(area.y1, area.y2, y1 + h1 / 2);
         fix12 += `left: ${(x - w1 / 2).toFixed(3)}px; top: ${(y - h1 / 2).toFixed(3)}px; filter: opacity(0); `;
-        fix22 = `left: ${(x - w2 / 2).toFixed(3)}px; top: ${(y - h21 / 2).toFixed(3)}px; `;
+        fix22 = `left: ${(x - w2 / 2 - x1).toFixed(3)}px; top: ${(y - h21 / 2 - y1).toFixed(3)}px; `;
       }
       fix22 += `width: ${w2.toFixed(3)}px; height: ${(h2 = Math.min(h22, resis.bottom - y + h21 / 2)).toFixed(3)}px; filter: opacity(1);`;
       if (w2 / w1 < h2 / h1) { // taller, scale using width
@@ -355,19 +378,23 @@ class Pop {
         break_promise = true;
         return;
       }
+      // 防止pop1被同时使用
+      if (pop_on_show) pop_on_show();
       if (timer1) clearTimeout(timer1);
       timer1 = setTimeout(() => {
         // 开始蓄力，进行预备运算
         timer2 = setTimeout(() => {
           // 蓄力完成，转移元素
-          setTimeout(() => {
+          console.log("fatal1");
+          timer_fatal = setTimeout(() => {
             // fix1开始反弹，fix2预备
+            console.log("fatal2");
             timer_fatal = setTimeout(() => {
               // 反弹完成，fix12开始展示
+              console.log("fatal3");
               timer_fatal = setTimeout(() => {
                 // 展示完成，触发展示事件，可以开始相应的加载
                 timer_fatal = 0;
-                showing = true;
                 if (presrv) {
                   custom.appendTo.appendChild(origin);
                   fix1.style = 'z-index: 90; transform: scale(1);';
@@ -379,23 +406,28 @@ class Pop {
               fix1.style = fix12;
               fix2.style = fix22;
               fix2inside.style = '';
+              pop_on_show = forceStop;
             }, 300);
             fix1.style.transform = 'scale(1)';
+            wrapElement.appendChild(fix2Pos);
             fix2.style = fix21;
             fix2inside.style = fix23;
           }, 0);
           timer2 = 0;
+          showing = true;
           fix1.style = fix11;
           now = wrapElement;
           origin = wrapElement.firstChild;
+          if (fix1.innerHTML != '') throw new Error('foo');
           fix1.appendChild(origin);
           wrapElement.className = wrapElement.className.slice(0, -14);
         }, 500);
         timer1 = 0;
         var pos = wrapElement.getBoundingClientRect();
-        if (pos.width != w1 || pos.height != h1 || pos.left != x1 || pos.top != y1)
+        if (pos.width != w1 || pos.height != h1 || pos.left != x1 || pos.top != y1) {
           w1 = pos.width; h1 = pos.height; x1 = pos.left; y1 = pos.top;
           calc();
+        }
         wrapElement.className += ' gt-pop-accmlt';
       }, 100);
     };
@@ -418,35 +450,104 @@ class Pop {
         wrapElement.className = wrapElement.className.slice(0, -14);
       }
     };
-    function distruct() {
-      timer3 = setTimeout(() => {
-        fix1.style = fix2.style = 'display: none;';
-        now.appendChild(origin);
+    this.tabEnterHandler = function (wrapElement) {
+      if (showing || timer_fatal) {
+        leave();
+        return;
+      }
+      if (pop_on_show) pop_on_show();
+      timer_fatal = setTimeout(() => {
+        // 反弹完成，fix12开始展示
+        timer_fatal = setTimeout(() => {
+          // 展示完成，触发展示事件，可以开始相应的加载
+          timer_fatal = 0;
+          showing = true;
+          pop_on_show = forceStop;
+          if (presrv) {
+            custom.appendTo.appendChild(origin);
+            fix1.style = 'z-index: 90; transform: scale(1);';
+          }
+          else
+            fix1.style = fix12 + 'z-index: 90;';
+          if (onShow) onShow([wrapElement, origin, pop_up]);
+        }, 300);
+        fix1.style = fix12;
+        fix2.style = fix22;
+        fix2inside.style = '';
+      }, 0);
+      var pos = wrapElement.getBoundingClientRect();
+      if (pos.width != w1 || pos.height != h1 || pos.left != x1 || pos.top != y1) {
+        w1 = pos.width; h1 = pos.height; x1 = pos.left; y1 = pos.top;
+        calc();
+      }
+      fix1.style = fix11 + 'transform: scale(1);';
+      now = wrapElement;
+      origin = wrapElement.firstChild;
+      fix1.appendChild(origin);
+      wrapElement.appendChild(fix2Pos);
+      fix2.style = fix21;
+      fix2inside.style = fix23;
+    }
+    function stopAnim() {
+      if (timer2) {
+        clearTimeout(timer2);
+        timer2 = 0;
+      }
+      if (timer3) {
+        clearTimeout(timer3);
         timer3 = 0;
+      }
+      if (timer_fatal) {
+        clearTimeout(timer_fatal);
+        timer_fatal = 0;
+      }
+    }
+    function distruct() {
+      console.log("animation hide");
+      if (!showing) return;
+      stopAnim();
+      timer3 = setTimeout(() => {
+        timer3 = 0;
+        if (!showing) return;
+        fix1.style = 'display: none;';
+        now.removeChild(fix2Pos);
+        now.appendChild(origin);
+        showing = false;
+        pop_on_show = null;
       }, 300);
       fix1.appendChild(origin);
       fix1.style = fix11 + 'transform: scale(1);';
       fix2.style = fix21;
       if (onHide) onHide();
     }
-    fix2.onmouseleave = function () {
-      if (timer3) return;
+    function forceStop() {
+      if (!showing) return;
+      console.log("force stop");
+      stopAnim();
+      fix1.style = 'display: none;';
+      now.appendChild(origin);
+      now.removeChild(fix2Pos);
+      if (onHide) onHide();
       showing = false;
+      pop_on_show = null;
+    }
+    function leave() {
+      if (timer3) return;
       if (timer_fatal) {
         clearTimeout(timer_fatal);
         timer_fatal = 0;
-        fix1.style = fix2.style = 'display: none;';
-        now.appendChild(origin);
-        if (onHide) onHide();
+        forceStop();
         return;
       }
       distruct();
+    }
+    fix2.onmouseleave = leave;
+    fix2.onmousemove = function (e) {
+      e.stopPropagation();
     };
     gt.subscribeClick(function () {
-      if (showing) {
-        distruct();
-        showing = false;
-      }
+      if (showing)
+        forceStop();
     });
   }
 }
@@ -464,6 +565,7 @@ class tbkBar {
   #count = 0;
   #bar = document.createElement("div");
   #stack = [];
+  #title = document.createElement("div");
   get count() { return this.#count; };
   get bar() { return this.#bar; };
 
@@ -473,6 +575,8 @@ class tbkBar {
     this.views[view.name] = view;
     var e = view.view;
     e.style.zIndex = '0';
+    this.#title.className = 'gt-toolbar-title';
+    this.#bar.appendChild(this.#title);
     this.#bar.appendChild(e);
     this.#bar.className = 'gt-toolbar';
     this.#bar.style.width = `${view.width}px`;
@@ -487,40 +591,67 @@ class tbkBar {
       throw new Error(eh + 'Please append gt.toolbar.View to Bar');
     this.views[view.name] = view;
     var e = view.view;
-    e.style = `width: ${view.width}px; filter: opacity(0); z-index: -1; margin-left: 20px`;
+    e.style = `width: ${view.width}px; filter: opacity(0); z-index: -1; margin-left: 20px; display: none;`;
     this.#bar.appendChild(e);
   }
   enter(viewName, titleTool) {
-    var view = this.views[viewName], title, now = this.#stack.top();
+    var view = this.views[viewName], now = this.#stack.top();
     var ehh = eh + 'when entering into another view:';
     if (!view) throw new Error(ehh + 'inexistent view');
+    if (titleTool && this.#title.innerHTML) throw new Error(ehh + 'title has been set already');
+    var bar = this.#bar, stack = this.#stack, titleWrap = this.#title;
 
+    bar.style.overflow = 'hidden';
+    view.view.style.display = 'block';
     if (titleTool) {
-      title = now.tools[titleTool];
+      let title = now.tools[titleTool];
       if (!title) throw new Error(ehh + 'inexistent tool');
-      if (title.tool.width != 40) throw new Error(ehh + 'illegal tool');
-
-      now.view.style = `width: ${title.l + 40}px; z-index: ${this.#stack.length}; margin-left: -${title.l}px; background-color: var(--priC)`;
-      now.disabled = true;
-      this.#stack.push(view);
-      view.view.style = `width: ${view.width}px; z-index: ${this.#stack.length}; margin-left: 40px; box-shadow: 1px 0 4px 2px var(--bgC)`;
-      this.#bar.style.width = `${view.width + 40}px`;
+      if (!(title.tool instanceof tbkTool || title.tool instanceof tbkGroup)) throw new Error(ehh + 'illegal tool');
+      
+      let content = title.tool.tool
+      titleWrap.innerHTML = (title.tool instanceof tbkTool ? content : content.slice(content.indexOf('">') + 2, -6)).replace(/ (id|title|tabindex)="[^\s]*/g, '');
+      setTimeout(() => {
+        now.view.style = `width: ${title.l + 40}px; z-index: ${stack.length}; margin-left: -${title.l}px; overflow: hidden;`;
+        // now.disabled = true;
+        stack.push(view);
+        view.view.style = `width: ${view.width}px; z-index: ${stack.length}; margin-left: 40px;`;
+        bar.style.width = `${view.width + 40}px`;
+      }, 0);
     }
     else {
-      now.view.style = `width: ${now.view.width}px; filter: opacity(0); z-index: ${this.#stack.length}; margin-left: -20px`;
-      this.#stack.push(view);
-      view.view.style = `width: ${view.width}px; z-index: ${this.#stack.length}; margin-left: 0`;
-      this.#bar.style.width = `${view.width}px`;
+      setTimeout(() => {
+        now.view.style = `width: ${now.view.width}px; filter: opacity(0); z-index: ${stack.length}; margin-left: -20px`;
+        stack.push(view);
+        view.view.style = `width: ${view.width}px; z-index: ${stack.length}; margin-left: 0`;
+        bar.style.width = `${view.width}px`;
+      }, 0);
     }
+    setTimeout(() => {
+      bar.style.overflow = 'visible';
+      now.view.style.display = 'none';
+      if (titleTool) titleWrap.style = 'display: block';
+    }, 300);
   }
   exit() {
     if (!this.#stack.length) return;
-    var now = this.#stack.pop();
+    var bar = this.#bar, stack = this.#stack, title = this.#title;
+    var now = stack.pop(), esc = stack.top();
+    if (title.innerHTML) {
+      title.style.display = 'none';
+      title.innerHTML = '';
+    }
     now.view.style = `width: ${now.width}px; filter: opacity(0); z-index: -1; margin-left: 20px`;
-    now = this.#stack.top();
-    now.view.style = `width: ${now.width}px; z-index: ${this.#stack.length}; margin-left: 0`;
-    now.disabled = false;
-    this.#bar.style.width = `${now.width}px`;
+    esc.view.style.display = 'block';
+    bar.style.overflow = 'hidden';
+    setTimeout(() => {
+      esc.view.style = `width: ${esc.width}px; z-index: ${stack.length}; margin-left: 0`;
+    }, 0);
+    // next.disabled = false;
+    bar.style = `width: ${esc.width}px; overflow: hidden;`;
+    setTimeout(() => {
+      esc.view.style.overflow = bar.style.overflow = 'visible';
+      now.view.style.display = 'none';
+    }, 300)
   }
 }
 
@@ -528,7 +659,7 @@ class tbkBar {
 var viewC = 0;
 class tbkView {
   tools = {};
-  disabled = false;
+  // disabled = false;
   #count = 0;
   #width = 0;
   #view = document.createElement("div");
@@ -544,7 +675,7 @@ class tbkView {
     var vc = viewC++;
     view.innerHTML += `<div class="gt-toolbar-hover"></div>`;
     view.addEventListener('mouseover', function (e) {
-      if (thisObj.disabled) return;
+      // if (thisObj.disabled) return;
       if (!hover) hover = view.firstChild;
       var t = tools[e.target.id.split('-')[2] || '-'];
       if (!t) return;
@@ -557,7 +688,7 @@ class tbkView {
       hover.style.filter = 'opacity(0)';
     });
     view.addEventListener('click', function (e) {
-      if (thisObj.disabled) return;
+      // if (thisObj.disabled) return;
       var t = tools[e.target.id.split('-').pop()];
       if (t) {
         if (t.pop) t.pop.clickHandler(document.getElementById('tool-' + t.tool.name).parentElement);
@@ -565,13 +696,18 @@ class tbkView {
       }
     });
     view.addEventListener('mousemove', function (e) {
-      if (thisObj.disabled) return;
+      // if (thisObj.disabled) return;
       var t = tools[e.target.id.split('-')[2] || '-'];
       if (t && t.pop) t.pop.mousemoveHandler(document.getElementById('tool-' + t.tool.name).parentElement);
     });
     view.addEventListener('mouseout', function (e) {
       var t = tools[e.target.id.split('-')[2] || '-'];
       if (t && t.pop) t.pop.mouseleaveHandler(document.getElementById('tool-' + t.tool.name).parentElement);
+    });
+    view.addEventListener('focus', function (e) {
+      e.preventDefault();
+      (focus_now = e.target.children[1]).focus();
+      console.log(focus_now);
     });
 
     this.#name = name;
@@ -590,9 +726,12 @@ class tbkView {
 
     if (toolObj instanceof tbkGroup) {
       if (click) toolObj.tools[toolObj.name].click = click;
-      this.tools[toolObj.name].pop = new Pop(toolObj.pop, {preserve: true, position: {x: 2, y: 2}, appendTo: toolObj.pop.firstChild, popupStyle: 'border-radius: 10px;'}, null, () => {
+      let trigger = (this.tools[toolObj.name].pop = new Pop(toolObj.pop, {preserve: true, position: {x: 2, y: 2}, appendTo: toolObj.pop.firstChild, popupStyle: 'border-radius: 10px;'}, null, () => {
         view.firstChild.style.filter = 'opacity(0)';
-      });
+      })).tabEnterHandler;
+      tabNavTriggers[toolObj.tool.match(/(?<=id=")[^"]+/)[0]] = function (el) {
+        trigger(el);
+      }
     }
   }
 };
@@ -605,7 +744,7 @@ class tbkTool {
   get color() { return this.#color; };
   get isOn() { return this.#isOn; };
   
-  // name icon [attach color shadow]
+  // name icon [attach color shadow title]
   constructor(obj) {
     var ehh = eh + 'When creating Tool: ';
     if (!obj || typeof obj != 'object') throw new Error(ehh + 'Illegal parameter.');
@@ -617,7 +756,9 @@ class tbkTool {
     if (color[0] == '-') {
       color = `var(-${color})`;
     }
-    var tool = `<div id="tool-${obj.name}" style="--ccc: ${color}" class="gt-tool">`;
+    var tool = `<div id="tool-${obj.name}" style="--ccc: ${color}" class="gt-tool"`;
+    if (obj.title) tool += ` title="${obj.title}"`;
+    tool += ' tabindex="0" role="button">';
     if (obj.shadow)
       tool += '<div style="drop-shadow(0 0 1px var(--fullR))">';
     this.#empty_mask = `width: ${res[obj.icon].w}px; height: ${res[obj.icon].h}px; position: absolute;`;
@@ -649,9 +790,10 @@ class tbkTool {
   }
 };
 
+var tbk_group_cnt = 0;
 class tbkGroup {
   tools = {};
-  #tool = '<div class="gt-tool-group">';
+  #tool = '<div class="gt-tool-group" tabindex="0" id="gt-tgroup-';
   #pop = document.createElement("div");
   #count = 0;
   #name;
@@ -667,7 +809,7 @@ class tbkGroup {
   constructor(firstTool) {
     if (!(firstTool instanceof tbkTool)) throw new Error(eh + "please use Tool to create Group");
     this.tools[firstTool.name] = {tool: firstTool};
-    this.#tool += firstTool.tool + '</div>';
+    this.#tool += `${++tbk_group_cnt}">${firstTool.tool}</div>`;
     this.#pop.className = 'gt-tool-grouppop';
     this.#pop.style.width = '44px';
     this.#pop.innerHTML = '<div style="width: 40px; height: 40px; margin-bottom: -2px;"></div>'
@@ -677,6 +819,7 @@ class tbkGroup {
     this.#pop.addEventListener('click', function (e) {
       var t = tools[e.target.id.split('-').pop()];
       if (t) if (t.click) t.click();
+      e.stopPropagation();
     });
   }
   

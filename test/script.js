@@ -48,18 +48,15 @@ $(function () {
 
     var isPlay = false;
     var b1 = new View('progMain');
-    var d1 = new Group(new Tool({name: 'run', icon: 'run'}));
-    d1.append(new Tool({name: 'runBefore', icon: 'run', attach: 'bwMini'}), function () {
+    var d1 = new Group(new Tool({name: 'run', icon: 'run', title: '保存、编译并运行代码'}));
+    d1.append(new Tool({name: 'runBefore', icon: 'run', attach: 'bwMini', title: '运行上次编译的代码'}), function () {
 
     });
     b1.append(d1, function () {
       a1.enter('run');
     });
-    var d2 = new Group(new Tool({name: 'debug', icon: 'debug'}));
-    d2.append(new Tool({name: 'debugBefore', icon: 'debug', attach: 'bwMini'}), function () {
-
-    });
-    d2.append(new Tool({name: 'debugTool', icon: 'eye'}), function () {
+    var d2 = new Group(new Tool({name: 'debug', icon: 'debug', title: '保存、编译并调试代码'}));
+    d2.append(new Tool({name: 'debugBefore', icon: 'debug', attach: 'bwMini', title: '调试上次编译的代码'}), function () {
 
     });
     b1.append(d2, function () {
@@ -67,11 +64,8 @@ $(function () {
       c4.change('pause');
       a1.enter('debug', 'debug');
     });
-    var d3 = new Group(new Tool({name: 'testRun', icon: 'test', attach: 'runMini'}));
-    d3.append(new Tool({name: 'newTest', icon: 'test', attach: 'addMini'}), function () {
-
-    });
-    d3.append(new Tool({name: 'allTest', icon: 'testSt1', attach: 'testSt2'}), function () {
+    var d3 = new Group(new Tool({name: 'testRun', icon: 'test', attach: 'runMini', title: '保存、编译并测试所有数据'}));
+    d3.append(new Tool({name: 'newTest', icon: 'test', attach: 'addMini', title: '新建一个测试点'}), function () {
 
     });
     b1.append(d3, function () {
@@ -79,28 +73,28 @@ $(function () {
     });
     var a1 = new Bar(b1);
     var b2 = new View('debug');
-    var c4 = new Tool({name: 'playPause', icon: 'pause'});
+    var c4 = new Tool({name: 'playPause', icon: 'pause', title: '暂停/继续调试'});
     b2.append(c4, function () {
       c4.change(isPlay ? 'play' : 'pause');
       isPlay = !isPlay;
     });
-    b2.append(new Tool({name: 'dbgAbort', icon: 'stop'}), function () {
+    b2.append(new Tool({name: 'dbgAbort', icon: 'stop', title: '终止调试'}), function () {
       a1.exit();
       isPlay = false;
     });
-    b2.append(new Tool({name: 'dbgStep', icon: 'fw'}), function () {
+    b2.append(new Tool({name: 'dbgStep', icon: 'fw', title: '运行直至下一步函数结束'}), function () {
 
     });
-    b2.append(new Tool({name: 'dbgEnter', icon: 'stepEnt'}), function () {
+    b2.append(new Tool({name: 'dbgEnter', icon: 'stepEnt', title: '单步进入函数'}), function () {
 
     });
-    b2.append(new Tool({name: 'dbgEsc', icon: 'stepEsc'}), function () {
+    b2.append(new Tool({name: 'dbgEsc', icon: 'stepEsc', title: '运行直至跳出当前函数'}), function () {
 
     });
     a1.append(b2);
 
     var b3 = new View('commonMain');
-    b3.append(new Tool({name: 'probCodes', icon: 'storage'}), function (tool) {
+    b3.append(new Tool({name: 'probCodes', icon: 'storage', title: '题目代码存档'}), function (tool) {
       if (tool.isOn) {
         tool.turnOff();
       }
@@ -108,46 +102,43 @@ $(function () {
         tool.turnOn();
       }
     });
-    var d4 = new Group(new Tool({name: 'addProb', icon: 'add'}));
-    d4.append(new Tool({name: 'importProb', icon: 'import'}), function () {
+    var d4 = new Group(new Tool({name: 'addProb', icon: 'add', title: '新建代码文件'}));
+    d4.append(new Tool({name: 'importProb', icon: 'import', title: '导入代码文件'}), function () {
 
     });
     b3.append(d4, function () {
 
     });
-    var d5 = new Group(new Tool({name: 'saveCode', icon: 'save'}));
-    d5.append(new Tool({name: 'saveAllProb', icon: 'saveAll'}), function () {
+    var d5 = new Group(new Tool({name: 'saveCode', icon: 'save', title: '保存代码'}));
+    d5.append(new Tool({name: 'saveAllProb', icon: 'saveAll', title: '保存所有代码'}), function () {
 
     });
     b3.append(d5, function () {
 
     });
-    b3.append(new Tool({name: 'codeUndo', icon: 'undo'}), function () {
+    b3.append(new Tool({name: 'codeUndo', icon: 'undo', title: '撤销操作'}), function () {
 
     });
-    b3.append(new Tool({name: 'codeRedo', icon: 'redo'}), function () {
+    b3.append(new Tool({name: 'codeRedo', icon: 'redo', title: '恢复操作'}), function () {
 
     });
     var a2 = new Bar(b3);
 
     var b4 = new View('otherMain');
-    b4.append(new Tool({name: 'probPanel', icon: 'problem'}), function () {
-      
-    });
-    var d6 = new Group(new Tool({name: 'submitCode', icon: 'send'}));
-    d6.append(new Tool({name: 'submitHistory', icon: 'send', attach: 'historyMini'}), function () {
+    var d6 = new Group(new Tool({name: 'submitCode', icon: 'send', title: '提交代码至OJ'}));
+    d6.append(new Tool({name: 'submitHistory', icon: 'send', attach: 'historyMini', title: '提交历史'}), function () {
 
     });
     b4.append(d6, function () {
 
     });
-    b4.append(new Tool({name: 'codeSearch', icon: 'search'}), function () {
+    b4.append(new Tool({name: 'codeSearch', icon: 'search', title: '查找与替换'}), function () {
 
     });
-    b4.append(new Tool({name: 'codeHistory', icon: 'tMachine'}), function () {
+    b4.append(new Tool({name: 'codeHistory', icon: 'tMachine', title: '代码备份点'}), function () {
 
     });
-    b4.append(new Tool({name: 'groupPanel', icon: 'group'}), function () {
+    b4.append(new Tool({name: 'groupPanel', icon: 'group', title: '打开机房互助面板'}), function () {
 
     });
     var a3 = new Bar(b4);

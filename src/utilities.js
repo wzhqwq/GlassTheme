@@ -27,10 +27,10 @@ document.body.addEventListener("click", function (e) {
   global_click_subscribers.map(function (fn) {
     fn(e);
   });
-})
+}, true);
 gt.subscribeClick = function (fn) {
   global_click_subscribers.push(fn);
-}
+};
 
 // animation utilities, public
 // 已知动画：工具栏移动色块动画、view切换动画(双对象)、工具切换图标(单次动画)
