@@ -6,6 +6,7 @@ window.addEventListener('keydown', function (e) {
   switch (e.keyCode) {
     case 13: case 32:
       let fn;
+      e.preventDefault();
       if (focus.id && (fn = tabNavTriggers[focus.id]))
         fn(focus);
       else

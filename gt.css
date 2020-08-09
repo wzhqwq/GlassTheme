@@ -46,7 +46,7 @@
   transition-duration: .3s;
   transition-timing-function: ease-out;
   transform: scale(.8);
-  position: absolute;
+  position: fixed;
   z-index: 110;
 }
 .gt-fix2 {
