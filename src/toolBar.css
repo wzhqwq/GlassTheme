@@ -1,3 +1,4 @@
+/* Tool::Tool */
 .gt-tool {
   width: 30px;
   height: 30px;
@@ -17,6 +18,7 @@
   outline-style: dashed;
 }
 
+/* Tool::Group */
 .gt-tool-group {
   width: 40px;
   height: 40px;
@@ -52,13 +54,7 @@
   outline: none;
 }
 
-.gt-rev {
-  background-color: var(--ccc);
-}
-.gt-rev .gt-icon {
-  background-color: var(--priC);
-}
-
+/* ToolBar::View */
 .gt-toolbar-view {
   height: 40px;
   position: absolute;
@@ -67,6 +63,20 @@
   transition-duration: .2s;
   transition-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
   z-index: 0;
+}
+.gt-toolbar-view > * {
+  display: inline-block;
+}
+
+/* ToolBar::Bar */
+.gt-toolbar {
+  border-radius: 10px;
+  height: 40px;
+  background-color: var(--priB);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  overflow: visible;
+  transition: width .2s;
 }
 .gt-toolbar-title {
   position: absolute;
@@ -88,22 +98,4 @@
   transition-property: filter, margin-left, width;
   transition-duration: .2s;
   transition-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
-}
-
-.gt-toolbar {
-  border-radius: 10px;
-  height: 40px;
-  background-color: var(--priB);
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
-  overflow: visible;
-  transition: width .2s;
-}
-.gt-toolbar-view > * {
-  display: inline-block;
-}
-.gt-toolbar-out {
-  height: 40px;
-  margin: 0 5px;
-  display: inline-block;
 }

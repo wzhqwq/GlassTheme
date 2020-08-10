@@ -124,7 +124,7 @@ class tbkView {
     view.addEventListener('mouseover', function (e) {
       // if (thisObj.disabled) return;
       if (!hover) hover = view.firstChild;
-      var t = tools[e.target.id.split('-')[2] || '-'];
+      var t = tools[e.target.id.match(/(?<=tool-[abm]?-)[^\s]*/) || ''];
       if (!t) return;
       hover.style.filter = 'opacity(.2)';
       hover.style.marginLeft = `${t.l + 2}px`;
@@ -136,7 +136,7 @@ class tbkView {
     });
     view.addEventListener('click', function (e) {
       // if (thisObj.disabled) return;
-      var t = tools[e.target.id.split('-').pop()];
+      var t = tools[e.target.id.match(/(?<=tool[abm-]{2,2}-)[^\s]*/) || ''];
       if (t) {
         if (t.pop) t.pop.clickHandler(document.getElementById('tool-' + t.tool.name).parentElement);
         if (t.click) t.click(t.tool);
@@ -144,11 +144,11 @@ class tbkView {
     });
     view.addEventListener('mousemove', function (e) {
       // if (thisObj.disabled) return;
-      var t = tools[e.target.id.split('-')[2] || '-'];
+      var t = tools[e.target.id.match(/(?<=tool-[abm]?-)[^\s]*/) || ''];
       if (t && t.pop) t.pop.mousemoveHandler(document.getElementById('tool-' + t.tool.name).parentElement);
     });
     view.addEventListener('mouseout', function (e) {
-      var t = tools[e.target.id.split('-')[2] || '-'];
+      var t = tools[e.target.id.match(/(?<=tool-[abm]?-)[^\s]*/) || ''];
       if (t && t.pop) t.pop.mouseleaveHandler(document.getElementById('tool-' + t.tool.name).parentElement);
     });
     view.addEventListener('focus', function (e) {
