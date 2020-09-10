@@ -28,43 +28,22 @@
     #rendered;
     #value;
     #name;
-    #width;
+    #setter;
     #listeners = {};
     get dom() { return this.domTemp || get_element(this); }
     get rendered() { return this.#rendered; }
-    set value(value) {
-      if (!this.#rendered) {
-        console.warn(eh + 'Value change on unrendered gtObject is not effective.');
-        return;
-      }
-      this.#setter.call(this.dom, this.#value = value);
-    }
-    get value() { return this.#value; }
     get name() { return this.#name; }
     get id() { return 'gt-' + this.#name; }
-    get width() { return this.#width; }
-    set size(value) {
-      if (!this.#rendered) {
-        console.warn(eh + 'Size change on unrendered gtObject is not effective.');
-        return;
-      }
-      this.elBaseCall(size => {
-        this.className = this.className.replace(/gt-[lgsm]{2,2}/, '') + size;
-      }, get_size_class(value));
-    }
-    set color(value) {
-      if (!this.#rendered) {
-        console.warn(eh + 'Color change on unrendered gtObject is not effective.');
-        return;
-      }
-      this.elBaseCall(color => {
-        this.className = this.className.replace(/gtc-[^/s]/, '') + color;
-      }, ' gtc-' + value);
-    }
 
-    constructor (name, value, width, getDOM, valueSetter, valueUpdter) {
+    constructor (name, value, genFn, valueSetter, valueUpdter) {
+      if (!name) throw new Error(eh + 'Illegal widget name.');
       this.#name = name;
       this.#setter = valueSetter;
+      // Support: input[type="text" | "file"] select textarea
+      if (valueUpdter)
+        this.on('change', (function (e) {
+          this.#value = valueUpdter(e.target);
+        }).bind(this));
       if (widgets.has(name)) {
         if (widgets.get(name).bound)
           throw new Error(`name'${name}' has been bound.`);
@@ -73,32 +52,58 @@
         // value
         if (value === null)
           this.#value = el.innerHTML || el.value;
-        else {
-          this.#value = value;
-          valueSetter.call(el, this.#value);
-        }
-        // width
-        if (width === null)
-          this.#width = el.getBoundingClientRect().width;
-        else {
-          this.#width = width;
-          el.style.width = typeof width == 'string' ? width : `${width}px`;
-        }
-        // Support: input[type="text" | "file"] select textarea
-        if (valueUpdter)
-          this.on('change', (e => {
-            this.#value = valueUpdter(e.target);
-          }).bind(this));
+        else
+          valueSetter[0].call(el, this.#value = value);
 
-        this.#rendered = true;
+        this.afterRendering(el);
       }
       else {
-        dom = getDOM();
-        this.#value = value;
-        this.#width = width;
+        this.html = genFn(name, this.#value = value || '');
         this.#rendered = false;
       }
       widgets.set(name, {bound: true});
+    }
+
+    value(value) {
+      if (value === null) return this.#value;
+
+      this.#value = value;
+      if (!this.#rendered)
+        this.html = this.html.replace(this.#setter[1], value);
+      else
+        this.#setter[0].call(this.dom, value);
+      return this;
+    }
+    width(value) {
+      if (typeof value == 'number') value = `${value}px`;
+      value = value || 'unset';
+
+      if (!this.#rendered) {
+        let pos = this.html.indexOf('style="');
+        this.html = pos == -1 ? this.html.replace(/id="/, `style="width: ${value}" id="`) : this.html.replace(/width: [^;"]*/, '').replace(/style="/, `style="width: ${value}; `);
+      }
+      else
+        this.dom.style.width = value;
+      return this;
+    }
+    size(value) {
+      if (!this.#rendered) {
+        let pos = this.html.indexOf('class="');
+        this.html = pos == -1 ? this.html.replace(/id="/, `class="${get_size_class(value)}" id="`) : this.html.replace(/gt-[lgsm]{2,2}/, '').replace(/class="/, `class="${get_size_class(value)}`);
+      }
+      else
+        this.dom.className = this.domTemp.className.replace(/gt-[lgsm]{2,2}/, '') + get_size_class(value);
+      return this;
+    }
+    color(value) {
+      value = value || 'none';
+      if (!this.#rendered) {
+        let pos = this.html.indexOf('class="');
+        this.html = pos == -1 ? this.html.replace(/id="/, `class="gtc-${value}" id="`) : this.html.replace(/gtc-[^/s]/, '').replace(/class="/, `class="gtc-${value} `);
+      }
+      else
+        this.dom.className = this.domTemp.className.replace(/gtc-[^/s]/, '') + ' gtc-' + value;
+      return this;
     }
 
     afterRendering (element) {
@@ -125,50 +130,64 @@
         this.#listeners[type].list.push(listener);
       else {
         let list = [listener];
-        let handler = e => {
-          list.forEach(listener => {
-            listener(e);
-          });
+        this.#listeners[type] = {
+          list: list,
+          handler: e => {
+            list.forEach(listener => {
+              listener(e);
+            });
+          }
         };
-        this.#listeners[type] = {list: list, main: handler};
       }
-    }
-
-    elBaseCall(fn, arg) {
-      fn.call(this.dom, arg);
     }
   }
 
   // 文本框对象
   class wgtText extends Widget {
-    constructor (name, value, width, color) {
+    constructor (name, value) {
       super(
-        name, value, width,
-        () => `<span id="gt-${name}"${width ? ` style="width: ${width || 'auto'}` : ''}" class="gt-text${color ? ` gtc-${color}` : ''}">${value}</span>`,
-        value => { this.innerHTML = value; }
+        name, value,
+        (name, value) => `<span id="gt-${name}" class="gt-text">${value}</span>`,
+        [function (value) { this.innerHTML = value; }, /(?<=>)[^<]*/]
       );
     }
   }
 
   // 单行输入框，可以监听值的变化
   class wgtInputBox extends Widget {
-    constructor (name, value, width, size, color, hint) {
+    #hint;
+
+    constructor (name, value) {
       super(
-        name, value, width,
-        () => `<input type="text" id="gt-${name}" value="${value}"${width ? ` style="width: ${width}` : ''}${hint ? ` placeholder="${hint}"` : ''} class="gt-input${size ? get_size_class(size) : ''}${color ? ` gtc-${color}` : ''}">`,
-        value => { this.value = value; },
+        name, value,
+        (name, value) => `<input type="text" id="gt-${name}" class="gt-input" value="${value}">`,
+        [function (value) { this.value = value; }, /(?<=value=")[^"]*/],
         el => el.value
       );
+    }
+
+    hint(msg) {
+      if (msg === null) return this.#hint;
+
+      this.#hint = msg;
+      if (this.rendered)
+        this.dom.placeholder = msg;
+      else {
+        var pos = this.html.indexOf('placeholder="');
+        this.html = pos == -1 ? this.html.replace(/id="/, `placeholder=${msg} id="`) : this.html.replace(/(?<=placeholder")[^"]*/);
+      }
     }
   }
 
   // 按钮，可以监听点击事件
   class wgtButton extends Widget {
-    constructor (name, value, size, color) {
+    constructor (name, value) {
       super(
-        name, value, null,
-        () => `<button id="gt-${name}" class="gt-btn${size ? get_size_class(size) : ''}${color ? ` gtc-${color}` : ''}"`,
-        value => (this.tagName == 'input' ? (this.value = value) : (this.innerHTML = value))
+        name, value,
+        (name, value) => `<button id="gt-${name}" class="gt-btn">${value}</button>`,
+        [function (value) {
+          this.tagName == 'input' ? (this.value = value) : (this.innerHTML = value);
+        }, /(?<=value=">)[^"]*|(?<=">)[^<]*/]
       );
     }
   }

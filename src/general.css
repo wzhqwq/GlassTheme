@@ -1,5 +1,6 @@
+/* 黑白主色 */
 .gtc-dark {
-  --bgC: #111;
+  --bgC: #111 !important;
   --priC: #333;
   --secC: #444;
   --priB: #333A;
@@ -14,7 +15,7 @@
   --hover: 1.3;
 }
 .gtc-light {
-  --bgC: #FAFAFA;
+  --bgC: #FAFAFA !important;
   --priC: #EEE;
   --secC: #DDD;
   --priB: #EEEA;
@@ -32,24 +33,34 @@
   background-color: #38F;
   color: #EEE;
 }
+/* 彩色主色 */
 .gtc-primary,
+.gtc-blue,
 .gtc-danger,
+.gtc-red,
 .gtc-ok,
+.gtc-green,
 .gtc-brown {
   --fgC: #EEE !important;
 }
+/* TODO: 为每一个颜色设计主要与次要颜色 */
+.gtc-blue,
 .gtc-primary {
   --bgC: var(--blue) !important;
 }
+.gtc-red,
 .gtc-danger {
   --bgC: var(--red) !important;
 }
+.gtc-green,
 .gtc-ok {
   --bgC: var(--green) !important;
+  --fgC: #222 !important;
 }
 .gtc-brown {
   --bgC: var(--brown) !important;
 }
+.gtc-orange,
 .gtc-warning {
   --fgC: #222 !important;
   --bgC: var(--orange) !important;

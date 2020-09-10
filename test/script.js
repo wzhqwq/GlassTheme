@@ -146,7 +146,10 @@ $(function () {
     var b5 = new View('searchBar');
 
     $('#code_tools').append(a2.bar).append(a1.bar).append(a3.bar);
-    var e1 = new Text();
-    $('#main').append();
+    var e1 = new Button('e1e1', 'test').color('red');
+    setTimeout(() => {
+      e1.value('succ').color('green').size('large');
+    }, 1000);
+    $('#widget-test').gtRender(e1);
   });
 });

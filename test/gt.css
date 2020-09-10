@@ -1,5 +1,6 @@
+/* 黑白主色 */
 .gtc-dark {
-  --bgC: #111;
+  --bgC: #111 !important;
   --priC: #333;
   --secC: #444;
   --priB: #333A;
@@ -14,7 +15,7 @@
   --hover: 1.3;
 }
 .gtc-light {
-  --bgC: #FAFAFA;
+  --bgC: #FAFAFA !important;
   --priC: #EEE;
   --secC: #DDD;
   --priB: #EEEA;
@@ -32,24 +33,34 @@
   background-color: #38F;
   color: #EEE;
 }
+/* 彩色主色 */
 .gtc-primary,
+.gtc-blue,
 .gtc-danger,
+.gtc-red,
 .gtc-ok,
+.gtc-green,
 .gtc-brown {
   --fgC: #EEE !important;
 }
+/* TODO: 为每一个颜色设计主要与次要颜色 */
+.gtc-blue,
 .gtc-primary {
   --bgC: var(--blue) !important;
 }
+.gtc-red,
 .gtc-danger {
   --bgC: var(--red) !important;
 }
+.gtc-green,
 .gtc-ok {
   --bgC: var(--green) !important;
+  --fgC: #222 !important;
 }
 .gtc-brown {
   --bgC: var(--brown) !important;
 }
+.gtc-orange,
 .gtc-warning {
   --fgC: #222 !important;
   --bgC: var(--orange) !important;
@@ -213,11 +224,15 @@
   --bgC: var(--fullR);
   color: var(--bgC);
 }
-
+.gt-text.gt-sm {
+  font-size: 12px;
+}
+.gt-text.gt-lg {
+  font-size: 20px;
+}
+/* 控件基本 */
 .gt-btn,
 .gt-input {
-  --bgC: var(--secC);
-  --fgC: var(--fullR);
   border-radius: 8px;
   height: 25px;
   border: 2px transparent solid;
@@ -230,22 +245,8 @@
   filter: brightness(var(--hover));
 }
 .gt-btn:focus,
-.gt-input[type="button"]:focus {
-  border-color: var(--fullR);
+.gt-input:focus {
   outline: none;
-}
-.gt-btn,
-.gt-input[type="button"] {
-  background-color: var(--bgC);
-  color: var(--fgC);
-  cursor: pointer;
-}
-.gt-input[type="text"] {
-  color: var(--fullR);
-  border-color: var(--secC);
-}
-.gt-input[type="text"] {
-  border-color: var(--bgC);
 }
 .gt-btn.gt-sm,
 .gt-input.gt-sm {
@@ -261,7 +262,32 @@
   padding: 1px 12px;
   font-size: 20px;
 }
-
+/* 按钮控件 */
+.gt-btn,
+.gt-input[type="button"] {
+  --bgC: var(--secC);
+  --fgC: var(--fullR);
+  background-color: var(--bgC);
+  color: var(--fgC);
+  cursor: pointer;
+  transition: transform .2s ease-out;
+}
+.gt-btn:focus,
+.gt-input[type="button"]:focus {
+  border-color: var(--fullR);
+  transform: scale(.95);
+}
+/* 单行输入框控件 */
+.gt-input[type="text"] {
+  --bgC: var(--fullR);
+  color: var(--fullR);
+  border-color: var(--secB);
+  background-color: var(--secB);
+}
+.gt-input[type="text"]:focus {
+  border-color: var(--bgC);
+}
+/* 多选框控件 */
 .gt-input[type="checkbox"] {
   appearance: none;
   width: 16px;

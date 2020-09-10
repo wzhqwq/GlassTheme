@@ -1,7 +1,7 @@
 var res = {};
 var maps = [];
 var unmMask = {};
-var retina = window.devicePixelRatio == 2;
+var retina = window.devicePixelRatio > 1;
 
 // TYPE: 0image 1spriteMap 2liveSprite
 
