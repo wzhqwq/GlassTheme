@@ -82,7 +82,7 @@ var ikIconGroup = function (layers) {
   if (!layers instanceof Array || !layers.length) {
     throw new Error(eh + "Illeagal layer array.");
   }
-  layers.map(function (item) {
+  layers.forEach(function (item) {
     // {img, color}
     if (!item instanceof ikIcon) {
       throw new Error(eh + "Every layer should be an instance of iconKit.Icon");
@@ -148,9 +148,9 @@ var ikIconMap = function (url, config) {
 
   var w = config.width, h = config.height, r = config.rows;
   var n = [];
-  r.map(function (col, i) {
+  r.forEach(function (col, i) {
     var p = 0;
-    col.map(function (item) {
+    col.forEach(function (item) {
       n[item.name] = new ikIcon(url, item.color, { x: p, y: i * h, w: w, h: h });
       p += w;
       if (item.hasMask) {
@@ -162,7 +162,7 @@ var ikIconMap = function (url, config) {
 
   constP(this, 'getIcons', function () {
     var ret = [];
-    [].slice.call(arguments).map(function (item) {
+    [].slice.call(arguments).forEach(function (item) {
       ret.push(n[item]);
     });
     return ret;

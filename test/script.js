@@ -44,7 +44,8 @@ $(function () {
   });*/
   gt.setMainElement(document.getElementById("main"));
   Promise.all([gt.loadSpriteMap('icons.json', 'icons.png', 'icons2x.png')]).then(function () {
-    var Tool = gt.toolbar.Tool, View = gt.toolbar.View, Bar = gt.toolbar.Bar, Group = gt.toolbar.Group;
+    const Tool = gt.toolbar.Tool, View = gt.toolbar.View, Bar = gt.toolbar.Bar, Group = gt.toolbar.Group;
+    const Text = gt.Widget.Text, InputBox = gt.Widget.InputBox, Button = gt.Widget.Button;
 
     var isPlay = false;
     var b1 = new View('progMain');
@@ -82,7 +83,7 @@ $(function () {
       a1.exit();
       isPlay = false;
     });
-    b2.append(new Tool({name: 'dbgStep', icon: 'fw', title: '运行直至下一步函数结束'}), function () {
+    b2.append(new Tool({name: 'dbgStep', icon: 'fw', title: '运行直至下一步的函数结束'}), function () {
 
     });
     b2.append(new Tool({name: 'dbgEnter', icon: 'stepEnt', title: '单步进入函数'}), function () {
@@ -145,5 +146,7 @@ $(function () {
     var b5 = new View('searchBar');
 
     $('#code_tools').append(a2.bar).append(a1.bar).append(a3.bar);
+    var e1 = new Text();
+    $('#main').append();
   });
 });

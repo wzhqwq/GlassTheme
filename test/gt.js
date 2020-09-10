@@ -4,40 +4,160 @@
   else
     window.gt = factory(window);
 })(window => {
-var gt = {};
-// basic utilities
+// 报错开头
 const eh = "Glass Theme: ";
-function d(msg) {
-  console.log(msg);
+const MAX_ELEMENT_CACHE_SIZE = 500;
+
+// tab导航控制
+var tabNavTriggers = {};
+window.addEventListener('keydown', function (e) {
+  var focus = document.activeElement;
+  if (!focus || focus.tagName == 'INPUT') return;
+  switch (e.keyCode) {
+    case 13: case 32: // enter, space
+      let fn;
+      e.preventDefault();
+      if (focus.id && (fn = tabNavTriggers[focus.id]))
+        fn(focus);
+      else
+        focus.click();
+      break;
+    case 9: // tab
+      break;
+    case 27:  // escape
+      if (pop_on_show)
+        pop_on_show();
+      // else
+  }
+});
+
+// 待加载队列
+var loadQueue = [], windowLoaded = false;
+gt = function (fn) {
+  if (windowLoaded)
+    fn();
+  else
+    loadQueue.push(fn);
 }
-function checkP(eh, obj, arr) {
-  arr.map(function (item) {
-    if (!obj[item]) {
-      throw new Error(eh + `property '${item}' lost`);
-    }
+window.addEventListener("load", function () {
+  loadQueue.forEach(fn => setTimeout(fn, 0));
+  windowLoaded = true;
+});
+
+// gtObject规范
+/*
+id, name, html: necessary
+afterRendering, afterRemoved: event
+dom: Element
+*/
+// 监听绑定（我猜react是这样实现的）
+var wait_dom = new Map(), exist_dom = new Map();
+var obsvr = new MutationObserver(node_handler);
+function render(gtObject) {
+  if (!(gtObject instanceof Array)) gtObject = [gtObject];
+  gtObject.forEach(o => {
+    if (!o.html || !o.id) throw new Error(eh + 'Rendering a nonstandard GlassTheme object.');
+    if (wait_dom.has(o.id)) return;
+    
+    wait_dom.set(o.name, o.onLoaded);
   });
+  obsvr.observe(this, { childList: true });
+
+  return this;
 }
-function checkPNumP(eh, obj, arr) {
-  arr.map(function (item) {
-    if (typeof obj[item] != 'number' || obj[item] <= 0) {
-      throw new Error(eh + `Illegal property '${item}'`);
+/*// 准备加入的功能
+var insert_wait_zone = document.createElement('div'); 
+function insert(gtObject) {
+}
+*/
+function node_handler(change_list) {
+  for (let change of change_list) {
+    if (change.type == 'childList') {
+      if (change.addedNodes.length)
+        Array.prototype.forEach.call(change.addedNodes, node => {
+          var id = node.id;
+          if (!wait_dom.has(id)) return;
+          var gt_obj = wait_dom.get(id);
+          exist_dom.set(id, gt_obj);
+          wait_dom.delete(id);
+          setTimeout(gt_obj.afterRendering, 0, node);
+        });
+      if (change.removedNodes.length)
+        Array.prototype.forEach.call(change.removedNodes, node => {
+          if (exist_dom.has(node.id)) setTimeout(exist_dom.get(node.id).afterRemoved, 0, node);
+        });
     }
-  });
+  }
 }
+gt.render = (destination, gtObject) => {
+  if (!(destination instanceof Element)) throw new Error(eh + 'please use render function on HTMLElement');
+  render.call(destination, gtObject);
+};
+if ($ && $.fn) {
+  $.fn.gtRender = gtObject => {
+    render.call(this, Array.prototype.slice.call(gtObject));
+    return this;
+  }
+}
+
+// 由循环队列管理的Element对象缓存
+var endless_q_el = new Array();
+var endless_qt_el = 0;
+/*
+  当缓存消失时调用获得dom元素
+  @param {Object} gtObject - gtObject元素
+  @return {Element} 获得的dom元素
+*/
+function get_element(gtObject) {
+  if (endless_qt_el == MAX_ELEMENT_CACHE_SIZE) endless_qt_el = 0;
+  if (endless_q_el[endless_qt_el]) {
+    endless_q_el[endless_qt_el] = gtObject;
+    endless_q_el[endless_qt_el].domTemp = null;
+  }
+  else {
+    endless_q_el.push(gtObject);
+  }
+  endless_qt_el++;
+  return gtObject.domTemp = document.getElementById(gtObject.id);
+}
+
+// 设置Pop等对象用于呈现悬浮元素的根
 var mainElement = document.body;
 gt.setMainElement = function (element) {
   if (!(element instanceof Element)) throw new Error(eh + "please use an element object as main element");
   mainElement = element;
+  element.appendChild(insert_wait_zone);
 }
+
+// 任意点击都可以触发的事件订阅
 var global_click_subscribers = [];
 document.body.addEventListener("click", function (e) {
-  global_click_subscribers.map(function (fn) {
+  global_click_subscribers.forEach(function (fn) {
     fn(e);
   });
 }, true);
 gt.subscribeClick = function (fn) {
   global_click_subscribers.push(fn);
 };
+
+// basic utilities
+function d(msg) {
+  console.log(msg);
+}
+function checkP(eh, obj, arr) {
+  arr.forEach(function (item) {
+    if (!obj[item]) {
+      throw new Error(eh + `property '${item}' lost`);
+    }
+  });
+}
+function checkPNumP(eh, obj, arr) {
+  arr.forEach(function (item) {
+    if (typeof obj[item] != 'number' || obj[item] <= 0) {
+      throw new Error(eh + `Illegal property '${item}'`);
+    }
+  });
+}
 
 // animation utilities, public
 // 已知动画：工具栏移动色块动画、view切换动画(双对象)、工具切换图标(单次动画)
@@ -124,24 +244,187 @@ gt.subscribeClick = function (fn) {
       this.element.style[i] = this.t[i];
   });
 })(gt, eh); */
-// tab导航控制
-var tabNavTriggers = {};
-window.addEventListener('keydown', function (e) {
-  var focus = document.activeElement;
-  if (!focus || focus.tagName == 'INPUT') return;
-  switch (e.keyCode) {
-    case 13: case 32:
-      let fn;
-      e.preventDefault();
-      if (focus.id && (fn = tabNavTriggers[focus.id]))
-        fn(focus);
-      else
-        focus.click();
-      break;
-    case 9: // tab
+((gt, window) => {
+  // 收集带有gt-开头的控件
+  var widgets = new Map();
+  var document = window.document;
+  gt(function () {
+    var wig = document.body.innerHTML.match(/(?<=id="gt-)[^"]+/g);
+    if (!wig) return;
+    wig.forEach((name) => {
+      widgets.set(name, {bound: false});
+    });
+  });
+
+  // 控件对象，实现对主色、大小的控制，符合gtObject规范
+  function get_size_class(value) {
+    var size = '';
+    switch (value) {
+      case 'large':
+        size = ' gt-lg';
+        break;
+      case 'small':
+        size = ' gt-sm';
+    }
+    return size;
   }
-  console.log(e.keyCode);
-});
+  class Widget {
+    domTemp;
+    html;
+    #rendered;
+    #value;
+    #name;
+    #width;
+    #listeners = {};
+    get dom() { return this.domTemp || get_element(this); }
+    get rendered() { return this.#rendered; }
+    set value(value) {
+      if (!this.#rendered) {
+        console.warn(eh + 'Value change on unrendered gtObject is not effective.');
+        return;
+      }
+      this.#setter.call(this.dom, this.#value = value);
+    }
+    get value() { return this.#value; }
+    get name() { return this.#name; }
+    get id() { return 'gt-' + this.#name; }
+    get width() { return this.#width; }
+    set size(value) {
+      if (!this.#rendered) {
+        console.warn(eh + 'Size change on unrendered gtObject is not effective.');
+        return;
+      }
+      this.elBaseCall(size => {
+        this.className = this.className.replace(/gt-[lgsm]{2,2}/, '') + size;
+      }, get_size_class(value));
+    }
+    set color(value) {
+      if (!this.#rendered) {
+        console.warn(eh + 'Color change on unrendered gtObject is not effective.');
+        return;
+      }
+      this.elBaseCall(color => {
+        this.className = this.className.replace(/gtc-[^/s]/, '') + color;
+      }, ' gtc-' + value);
+    }
+
+    constructor (name, value, width, getDOM, valueSetter, valueUpdter) {
+      this.#name = name;
+      this.#setter = valueSetter;
+      if (widgets.has(name)) {
+        if (widgets.get(name).bound)
+          throw new Error(`name'${name}' has been bound.`);
+        let el = this.dom;
+        this.html = el.outerHTML;
+        // value
+        if (value === null)
+          this.#value = el.innerHTML || el.value;
+        else {
+          this.#value = value;
+          valueSetter.call(el, this.#value);
+        }
+        // width
+        if (width === null)
+          this.#width = el.getBoundingClientRect().width;
+        else {
+          this.#width = width;
+          el.style.width = typeof width == 'string' ? width : `${width}px`;
+        }
+        // Support: input[type="text" | "file"] select textarea
+        if (valueUpdter)
+          this.on('change', (e => {
+            this.#value = valueUpdter(e.target);
+          }).bind(this));
+
+        this.#rendered = true;
+      }
+      else {
+        dom = getDOM();
+        this.#value = value;
+        this.#width = width;
+        this.#rendered = false;
+      }
+      widgets.set(name, {bound: true});
+    }
+
+    afterRendering (element) {
+      this.#rendered = true;
+      for (let listener_name in this.#listeners) {
+        let t = this.#listeners[listener_name].handler;
+        if (t)
+          element.addEventListener(listener_name, t);
+      }
+    }
+
+    afterRemoved (element) {
+      this.#rendered = false;
+      for (let listener_name in this.#listeners) {
+        let t = this.#listeners[listener_name].handler;
+        if (t)
+          element.removeEventListener(listener_name, t);
+      }
+    }
+
+    on (type, listener) {
+      let t = this.#listeners[type];
+      if (t && t.list)
+        this.#listeners[type].list.push(listener);
+      else {
+        let list = [listener];
+        let handler = e => {
+          list.forEach(listener => {
+            listener(e);
+          });
+        };
+        this.#listeners[type] = {list: list, main: handler};
+      }
+    }
+
+    elBaseCall(fn, arg) {
+      fn.call(this.dom, arg);
+    }
+  }
+
+  // 文本框对象
+  class wgtText extends Widget {
+    constructor (name, value, width, color) {
+      super(
+        name, value, width,
+        () => `<span id="gt-${name}"${width ? ` style="width: ${width || 'auto'}` : ''}" class="gt-text${color ? ` gtc-${color}` : ''}">${value}</span>`,
+        value => { this.innerHTML = value; }
+      );
+    }
+  }
+
+  // 单行输入框，可以监听值的变化
+  class wgtInputBox extends Widget {
+    constructor (name, value, width, size, color, hint) {
+      super(
+        name, value, width,
+        () => `<input type="text" id="gt-${name}" value="${value}"${width ? ` style="width: ${width}` : ''}${hint ? ` placeholder="${hint}"` : ''} class="gt-input${size ? get_size_class(size) : ''}${color ? ` gtc-${color}` : ''}">`,
+        value => { this.value = value; },
+        el => el.value
+      );
+    }
+  }
+
+  // 按钮，可以监听点击事件
+  class wgtButton extends Widget {
+    constructor (name, value, size, color) {
+      super(
+        name, value, null,
+        () => `<button id="gt-${name}" class="gt-btn${size ? get_size_class(size) : ''}${color ? ` gtc-${color}` : ''}"`,
+        value => (this.tagName == 'input' ? (this.value = value) : (this.innerHTML = value))
+      );
+    }
+  }
+
+  gt.Widget = {
+    Text: wgtText,
+    InputBox: wgtInputBox,
+    Button: wgtButton
+  }
+})(gt, window);
 var res = {};
 var maps = [];
 var unmMask = {};
@@ -181,9 +464,9 @@ gt.loadSpriteMap = function (info, path, path2x) {
       }
     
       var w = info.width, h = info.height, r = info.rows, i = 0;
-      r.map(function (col) {
+      r.forEach(function (col) {
         var j = 0;
-        col.map(function (item) {
+        col.forEach(function (item) {
           if (res[item.name]) throw new Error(ehh + `resourse name repeat: ${name}`);
   
           var name = item.name;
@@ -199,10 +482,10 @@ gt.loadSpriteMap = function (info, path, path2x) {
         }
 
         r = info.masks;
-        r.map(function (col) {
+        r.forEach(function (col) {
           var j = 0;
-          col.map(function (item) {
-            item.split(',').map(function (item) {
+          col.forEach(function (item) {
+            item.split(',').forEach(function (item) {
               if (res[item])
                 res[item].mask = {path : maps.length, x : j, y : i, w : w, h : h};
               else
@@ -407,7 +690,6 @@ class Pop {
               fix1.style = fix12;
               fix2.style = fix22;
               fix2inside.style = '';
-              pop_on_show = forceStop;
             }, 300);
             fix1.style.transform = 'scale(1)';
             wrapElement.appendChild(fix2Pos);
@@ -430,6 +712,7 @@ class Pop {
           calc();
         }
         wrapElement.className += ' gt-pop-accmlt';
+        pop_on_show = forceStop;
       }, 100);
     };
     this.mouseleaveHandler = function () {
@@ -678,7 +961,7 @@ class tbkView {
     view.addEventListener('mouseover', function (e) {
       // if (thisObj.disabled) return;
       if (!hover) hover = view.firstChild;
-      var t = tools[e.target.id.split('-')[2] || '-'];
+      var t = tools[e.target.id.match(/(?<=tool-[abm]?-)[^\s]*/) || ''];
       if (!t) return;
       hover.style.filter = 'opacity(.2)';
       hover.style.marginLeft = `${t.l + 2}px`;
@@ -690,7 +973,7 @@ class tbkView {
     });
     view.addEventListener('click', function (e) {
       // if (thisObj.disabled) return;
-      var t = tools[e.target.id.split('-').pop()];
+      var t = tools[e.target.id.match(/(?<=tool-)[^\s]*/) || ''];
       if (t) {
         if (t.pop) t.pop.clickHandler(document.getElementById('tool-' + t.tool.name).parentElement);
         if (t.click) t.click(t.tool);
@@ -698,11 +981,11 @@ class tbkView {
     });
     view.addEventListener('mousemove', function (e) {
       // if (thisObj.disabled) return;
-      var t = tools[e.target.id.split('-')[2] || '-'];
+      var t = tools[e.target.id.match(/(?<=tool-[abm]?-)[^\s]*/) || ''];
       if (t && t.pop) t.pop.mousemoveHandler(document.getElementById('tool-' + t.tool.name).parentElement);
     });
     view.addEventListener('mouseout', function (e) {
-      var t = tools[e.target.id.split('-')[2] || '-'];
+      var t = tools[e.target.id.match(/(?<=tool-[abm]?-)[^\s]*/) || ''];
       if (t && t.pop) t.pop.mouseleaveHandler(document.getElementById('tool-' + t.tool.name).parentElement);
     });
     view.addEventListener('focus', function (e) {

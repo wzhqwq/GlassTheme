@@ -15,7 +15,7 @@ For example: '-red' will be changed into 'var(--red)';
 
 ## 接下来应如何架构
 
-目前的想法是，支持HTML元素的名称绑定，跟Vue、angular差不多吧
+目前的想法是，支持HTML元素的名称绑定
 
 然后以构造函数的方式建立js与元素的联系，同时也可以通过构造函数创建元素，目前将完全依赖id，toolbar组件未完全转化
 

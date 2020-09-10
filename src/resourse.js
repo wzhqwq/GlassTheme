@@ -37,9 +37,9 @@ gt.loadSpriteMap = function (info, path, path2x) {
       }
     
       var w = info.width, h = info.height, r = info.rows, i = 0;
-      r.map(function (col) {
+      r.forEach(function (col) {
         var j = 0;
-        col.map(function (item) {
+        col.forEach(function (item) {
           if (res[item.name]) throw new Error(ehh + `resourse name repeat: ${name}`);
   
           var name = item.name;
@@ -55,10 +55,10 @@ gt.loadSpriteMap = function (info, path, path2x) {
         }
 
         r = info.masks;
-        r.map(function (col) {
+        r.forEach(function (col) {
           var j = 0;
-          col.map(function (item) {
-            item.split(',').map(function (item) {
+          col.forEach(function (item) {
+            item.split(',').forEach(function (item) {
               if (res[item])
                 res[item].mask = {path : maps.length, x : j, y : i, w : w, h : h};
               else

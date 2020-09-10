@@ -132,7 +132,6 @@ class Pop {
               fix1.style = fix12;
               fix2.style = fix22;
               fix2inside.style = '';
-              pop_on_show = forceStop;
             }, 300);
             fix1.style.transform = 'scale(1)';
             wrapElement.appendChild(fix2Pos);
@@ -155,6 +154,7 @@ class Pop {
           calc();
         }
         wrapElement.className += ' gt-pop-accmlt';
+        pop_on_show = forceStop;
       }, 100);
     };
     this.mouseleaveHandler = function () {

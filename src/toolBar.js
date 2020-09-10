@@ -136,7 +136,7 @@ class tbkView {
     });
     view.addEventListener('click', function (e) {
       // if (thisObj.disabled) return;
-      var t = tools[e.target.id.match(/(?<=tool[abm-]{2,2}-)[^\s]*/) || ''];
+      var t = tools[e.target.id.match(/(?<=tool-)[^\s]*/) || ''];
       if (t) {
         if (t.pop) t.pop.clickHandler(document.getElementById('tool-' + t.tool.name).parentElement);
         if (t.click) t.click(t.tool);

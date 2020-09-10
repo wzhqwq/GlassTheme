@@ -1,0 +1,77 @@
+/* 基本控件们 */
+.gt-text {
+  --bgC: var(--fullR);
+  color: var(--bgC);
+}
+
+.gt-btn,
+.gt-input {
+  --bgC: var(--secC);
+  --fgC: var(--fullR);
+  border-radius: 8px;
+  height: 25px;
+  border: 2px transparent solid;
+  line-height: 21px;
+  padding: 0px 6px;
+  transition: filter .3s ease-out, border-color .3s ease-out;
+}
+.gt-btn:hover,
+.gt-input:hover {
+  filter: brightness(var(--hover));
+}
+.gt-btn:focus,
+.gt-input[type="button"]:focus {
+  border-color: var(--fullR);
+  outline: none;
+}
+.gt-btn,
+.gt-input[type="button"] {
+  background-color: var(--bgC);
+  color: var(--fgC);
+  cursor: pointer;
+}
+.gt-input[type="text"] {
+  color: var(--fullR);
+  border-color: var(--secC);
+}
+.gt-input[type="text"] {
+  border-color: var(--bgC);
+}
+.gt-btn.gt-sm,
+.gt-input.gt-sm {
+  border-radius: 10px;
+  height: 20px;
+  line-height: 16px;
+  font-size: 12px;
+}
+.gt-btn.gt-lg,
+.gt-input.gt-lg {
+  height: 30px;
+  line-height: 24px;
+  padding: 1px 12px;
+  font-size: 20px;
+}
+
+.gt-input[type="checkbox"] {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  cursor: grab;
+  border-width: 1px;
+  border-radius: 5px;
+  padding: 0;
+}
+.gt-input[type="checkbox"]:checked {
+  background-color: var(--blue);
+}
+.gt-input[type="checkbox"]::before {
+  content: "";
+  width: 16px;
+  height: 16px;
+  display: block;
+  margin: -1px;
+}
+.gt-input[type="checkbox"]:checked::before {
+  -webkit-mask-image: url('data:image/svg+xml;utf8,%3C?xml%20version=%221.0%22%20encoding=%22UTF-8%22%20standalone=%22no%22?%3E%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20xml:space=%22preserve%22%20version=%221.1%22%20viewBox=%220%200%2016%2016%22%3E%3Cpath%20stroke=%22black%22%20stroke-width=%222%22%20d=%22M3.20829+8.79045L6.69632+12.1959L13.006+4.95793%22%20fill=%22none%22%20stroke-linecap=%22round%22%20opacity=%221%22%20stroke-linejoin=%22round%22/%3E%3C/svg%3E');
+  background-color: var(--fullR);
+}
