@@ -6,7 +6,7 @@
     var wig = document.body.innerHTML.match(/(?<=id="gt-)[^"]+/g);
     if (!wig) return;
     wig.forEach((name) => {
-      widgets.set(name, {bound: false});
+      widgets.set(name, {obj: null});
     });
   });
 
@@ -45,7 +45,7 @@
           this.#value = valueUpdter(e.target);
         }).bind(this));
       if (widgets.has(name)) {
-        if (widgets.get(name).bound)
+        if (widgets.get(name).obj)
           throw new Error(`name'${name}' has been bound.`);
         let el = this.dom;
         this.html = el.outerHTML;
@@ -61,7 +61,7 @@
         this.html = genFn(name, this.#value = value || '');
         this.#rendered = false;
       }
-      widgets.set(name, {bound: true});
+      widgets.set(name, {obj: this});
     }
 
     value(value) {
@@ -192,9 +192,13 @@
     }
   }
 
-  gt.Widget = {
-    Text: wgtText,
-    InputBox: wgtInputBox,
-    Button: wgtButton
+  gt.Widget = function (name) {
+    if (widgets.has(name))
+      return widgets.get(name).obj;
+    return null;
   }
+
+  gt.Widget.Text = wgtText;
+  gt.Widget.InputBox = wgtInputBox;
+  gt.Widget.Button = wgtButton;
 })(gt, window);
