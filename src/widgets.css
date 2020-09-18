@@ -14,7 +14,6 @@
 .gt-input {
   border-radius: 8px;
   height: 25px;
-  border: 2px transparent solid;
   line-height: 21px;
   padding: 0px 6px;
   transition: filter .3s ease-out, border-color .3s ease-out;
@@ -44,23 +43,25 @@
 /* 按钮控件 */
 .gt-btn,
 .gt-input[type="button"] {
-  --bgC: var(--secC);
+  --bgC: var(--secB);
   --fgC: var(--fullR);
   background-color: var(--bgC);
+  border: 2px transparent solid;
   color: var(--fgC);
   cursor: pointer;
   transition: transform .2s ease-out;
 }
 .gt-btn:focus,
-.gt-input[type="button"]:focus {
-  border-color: var(--fullR);
+.gt-input[type="button"]:focus,
+.gt-input[type="checkbox"]:focus {
+  border-color: var(--fullR) !important;
   transform: scale(.95);
 }
 /* 单行输入框控件 */
 .gt-input[type="text"] {
   --bgC: var(--fullR);
   color: var(--fullR);
-  border-color: var(--secB);
+  border: 1px var(--secB) solid;
   background-color: var(--secB);
 }
 .gt-input[type="text"]:focus {
@@ -69,15 +70,17 @@
 /* 多选框控件 */
 .gt-input[type="checkbox"] {
   appearance: none;
+  border: 1px var(--secB) solid;
+  background-color: var(--secB);
   width: 16px;
   height: 16px;
   cursor: grab;
-  border-width: 1px;
   border-radius: 5px;
   padding: 0;
 }
 .gt-input[type="checkbox"]:checked {
   background-color: var(--blue);
+  border-color: transparent;
 }
 .gt-input[type="checkbox"]::before {
   content: "";

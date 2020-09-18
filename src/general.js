@@ -33,6 +33,8 @@ gt = function (fn) {
   else
     loadQueue.push(fn);
 }
+// Animation是对已知元素附加动画的一系列类，因此不是gtObject
+gt.Animation = {};
 window.addEventListener("load", function () {
   loadQueue.forEach(fn => setTimeout(fn, 0));
   windowLoaded = true;
@@ -47,6 +49,7 @@ dom: Element
 // 监听绑定（我猜react是这样实现的）
 var wait_dom = new Map(), exist_dom = new Map();
 var obsvr = new MutationObserver(node_handler);
+// 同样也可以向未加入DOM的元素加入
 function render(dest, gtObject) {
   if (!(gtObject instanceof Array)) gtObject = [gtObject];
   var output = ''

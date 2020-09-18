@@ -103,7 +103,7 @@
   filter: opacity(0);
   transform-origin: 0 0;
   overflow: hidden;
-  position: absolute;
+  position: fixed;
   z-index: 100;
 }
 .gt-fix2-inside {
@@ -115,4 +115,6 @@
 .gt-relative-position {
   position: relative;
 }
-
+.gt-relative-position > div {
+  position: absolute !important;
+}

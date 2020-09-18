@@ -25,6 +25,8 @@
   class Widget {
     domTemp;
     html;
+    // 当组件成组时，组合组件可以托管点击事件, 渲染触发后会向组合组件更新点击事件
+    group_widget = false;
     #rendered;
     #value;
     #name;
@@ -109,15 +111,17 @@
     afterRendering (element) {
       this.#rendered = true;
       for (let listener_name in this.#listeners) {
+        if (listener_name == 'click' && this.group_widget) continue;
         let t = this.#listeners[listener_name].handler;
         if (t)
           element.addEventListener(listener_name, t);
       }
     }
-
+    
     afterRemoved (element) {
       this.#rendered = false;
       for (let listener_name in this.#listeners) {
+        if (listener_name == 'click' && this.group_widget) continue;
         let t = this.#listeners[listener_name].handler;
         if (t)
           element.removeEventListener(listener_name, t);

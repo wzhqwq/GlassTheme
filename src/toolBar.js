@@ -138,23 +138,22 @@ class tbkView {
       // if (thisObj.disabled) return;
       var t = tools[e.target.id.match(/(?<=tool-)[^\s]*/) || ''];
       if (t) {
-        if (t.pop) t.pop.clickHandler(document.getElementById('tool-' + t.tool.name).parentElement);
+        if (t.pop) t.pop.clickHandler(t.shell);
         if (t.click) t.click(t.tool);
       }
     });
     view.addEventListener('mousemove', function (e) {
       // if (thisObj.disabled) return;
       var t = tools[e.target.id.match(/(?<=tool-[abm]?-)[^\s]*/) || ''];
-      if (t && t.pop) t.pop.mousemoveHandler(document.getElementById('tool-' + t.tool.name).parentElement);
+      if (t && t.pop) t.pop.mousemoveHandler(t.shell);
     });
     view.addEventListener('mouseout', function (e) {
       var t = tools[e.target.id.match(/(?<=tool-[abm]?-)[^\s]*/) || ''];
-      if (t && t.pop) t.pop.mouseleaveHandler(document.getElementById('tool-' + t.tool.name).parentElement);
+      if (t && t.pop) t.pop.mouseleaveHandler(t.shell);
     });
     view.addEventListener('focus', function (e) {
       e.preventDefault();
       (focus_now = e.target.children[1]).focus();
-      console.log(focus_now);
     });
 
     this.#name = name;
@@ -173,10 +172,18 @@ class tbkView {
 
     if (toolObj instanceof tbkGroup) {
       if (click) toolObj.tools[toolObj.name].click = click;
-      let trigger = (this.tools[toolObj.name].pop = new Pop(toolObj.pop, {preserve: true, position: {x: 2, y: 2}, appendTo: toolObj.pop.firstChild, popupStyle: 'border-radius: 10px;'}, null, () => {
+      let trigger = (this.tools[toolObj.name].pop = new aniTemporaryPop(toolObj.pop, {preserve: true, position: {x: 2, y: 2}, appendTo: toolObj.pop.firstChild, popupStyle: 'border-radius: 10px;'}, null, () => {
+        // 背后的高亮消失
         view.firstChild.style.filter = 'opacity(0)';
       })).tabEnterHandler;
-      tabNavTriggers[toolObj.tool.match(/(?<=id=")[^"]+/)[0]] = function (el) {
+      let shell = null;
+      Object.defineProperty(this.tools[toolObj.name], 'shell', {
+        get: function () {
+          if (!shell) shell = document.getElementById(`gt-tgroup-${toolObj.id}`);
+          return shell;
+        }
+      })
+      tabNavTriggers[`gt-tgroup-${toolObj.id}`] = function (el) {
         trigger(el);
       }
     }
@@ -240,6 +247,7 @@ class tbkTool {
 var tbk_group_cnt = 0;
 class tbkGroup {
   tools = {};
+  id;
   #tool = '<div class="gt-tool-group" tabindex="0" id="gt-tgroup-';
   #pop = document.createElement("div");
   #count = 0;
@@ -257,6 +265,7 @@ class tbkGroup {
     if (!(firstTool instanceof tbkTool)) throw new Error(eh + "please use Tool to create Group");
     this.tools[firstTool.name] = {tool: firstTool};
     this.#tool += `${++tbk_group_cnt}">${firstTool.tool}</div>`;
+    this.id = tbk_group_cnt;
     this.#pop.className = 'gt-tool-grouppop';
     this.#pop.style.width = '44px';
     this.#pop.innerHTML = '<div style="width: 40px; height: 40px; margin-bottom: -2px;"></div>'
