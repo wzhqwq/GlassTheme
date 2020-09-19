@@ -35,14 +35,14 @@ class aniTemporaryPop {
     if (custom) {
       if (custom.resistance) resis = custom.resistance;
       if (custom.preserve) {
-        presrv = custom.position || {x: 0, y: 0, scale: 1};
+        presrv = custom.position || { x: 0, y: 0, scale: 1 };
         presrv.scale = presrv.scale || 1;
         if (!custom.appendTo) throw new Error(eh + "original element need to be appended to an element in the pop-up element when you choose to preserve it");
       }
     }
 
     var timer1 = 0, timer2 = 0, timer3 = 0, timer_fatal = 0, break_promise = false, now, origin, showing = false;
-    
+
     var fix1 = document.createElement("div");
     fix1.className = 'gt-fix1';
     fix1.style.display = 'none';
@@ -58,8 +58,8 @@ class aniTemporaryPop {
 
     var w1 = 0, h1 = 0, x1, y1, x2, y2;
     var w2 = parseInt(pop_up.style.width),
-    h21 = parseInt(pop_up.style.height) || parseInt(pop_up.style.minHeight),
-    h22 = parseInt(pop_up.style.height) || parseInt(pop_up.style.maxHeight);
+      h21 = parseInt(pop_up.style.height) || parseInt(pop_up.style.minHeight),
+      h22 = parseInt(pop_up.style.height) || parseInt(pop_up.style.maxHeight);
     var area = {}, fix11, fix12, fix21, fix22, fix23;
 
     if (resis.left == undefined) resis.left = -(1 << 30);
@@ -301,14 +301,14 @@ class aniFixedPop {
     if (custom) {
       if (custom.resistance) resis = custom.resistance;
       if (custom.preserve) {
-        presrv = custom.position || {x: 0, y: 0, scale: 1};
+        presrv = custom.position || { x: 0, y: 0, scale: 1 };
         presrv.scale = presrv.scale || 1;
         if (!custom.appendTo) throw new Error(eh + "original element need to be appended to an element in the pop-up element when you choose to preserve it");
       }
     }
 
     var timer3, timer_fatal = 0, now, origin, showing = false;
-    
+
     var fix1 = document.createElement("div");
     fix1.className = 'gt-fix1';
     fix1.style.display = 'none';
@@ -322,8 +322,8 @@ class aniFixedPop {
 
     var w1 = 0, h1 = 0, x1, y1, x2, y2;
     var w2 = parseInt(pop_up.style.width),
-    h21 = parseInt(pop_up.style.height) || parseInt(pop_up.style.minHeight),
-    h22 = parseInt(pop_up.style.height) || parseInt(pop_up.style.maxHeight);
+      h21 = parseInt(pop_up.style.height) || parseInt(pop_up.style.minHeight),
+      h22 = parseInt(pop_up.style.height) || parseInt(pop_up.style.maxHeight);
     var area = {}, fix11, fix12, fix21, fix22, fix23;
 
     if (resis.left == undefined) resis.left = -(1 << 30);

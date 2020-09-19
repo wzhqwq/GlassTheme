@@ -21,7 +21,7 @@ window.addEventListener('keydown', function (e) {
     case 27:  // escape
       if (pop_on_show)
         pop_on_show();
-      // else
+    // else
   }
 });
 
@@ -56,7 +56,7 @@ function render(dest, gtObject) {
   gtObject.forEach(o => {
     if (!o.html || !o.id) throw new Error(eh + 'Rendering a nonstandard GlassTheme object.');
     if (wait_dom.has(o.id)) return;
-    
+
     wait_dom.set(o.id, o);
     output += o.html;
   });

@@ -10,9 +10,9 @@ gt.loadImage = function (name, path, path2x) {
   if (res[name]) throw new Error(eh + `resourse name repeat: ${name}`);
 
   var p = new Promise(function (rsv, rej) {
-    res[name] = {type: 0, path: retina && path2x ? path2x : path};
+    res[name] = { type: 0, path: retina && path2x ? path2x : path };
     var image = new Image();
-    image.onload = function() {
+    image.onload = function () {
       res[name].w = image.width;
       res[name].h = image.height;
       rsv();
@@ -31,19 +31,19 @@ gt.loadSpriteMap = function (info, path, path2x) {
     function ok(rsv) {
       checkP(ehh, info, ['width', 'height', 'rows']);
       checkPNumP(ehh, info, ['width', 'height']);
-  
+
       if (!info.rows instanceof Array || !info.rows.length) {
         throw new Error(ehh + 'Illegal rows array');
       }
-    
+
       var w = info.width, h = info.height, r = info.rows, i = 0;
       r.forEach(function (col) {
         var j = 0;
         col.forEach(function (item) {
           if (res[item.name]) throw new Error(ehh + `resourse name repeat: ${name}`);
-  
+
           var name = item.name;
-          res[name] = {type : 1, path : maps.length, color : item.color, x : j, y : i, w : w, h : h};
+          res[name] = { type: 1, path: maps.length, color: item.color, x: j, y: i, w: w, h: h };
           if (unmMask[name]) res[name].mask = unmMask[name];
           j += w;
         });
@@ -60,19 +60,19 @@ gt.loadSpriteMap = function (info, path, path2x) {
           col.forEach(function (item) {
             item.split(',').forEach(function (item) {
               if (res[item])
-                res[item].mask = {path : maps.length, x : j, y : i, w : w, h : h};
+                res[item].mask = { path: maps.length, x: j, y: i, w: w, h: h };
               else
-                unmMask[item] = {path : maps.length, x : j, y : i, w : w, h : h};
-              });
-              j += w;
+                unmMask[item] = { path: maps.length, x: j, y: i, w: w, h: h };
+            });
+            j += w;
           });
           i += h;
         });
       }
-      
+
       var img = new Image();
       img.onload = function () {
-        maps.push({path : path, w : img.width, h : img.height});
+        maps.push({ path: path, w: img.width, h: img.height });
         rsv();
       };
       img.src = path;
@@ -127,5 +127,5 @@ gt.loadLiveSprite = function (name, path, path2x) {
   path = retina && path2x ? path2x : path;
   if (typeof path != 'string' || typeof path2x != 'string') throw new Error(ehh + "sprite path should be a string.");
 
-  
+
 }

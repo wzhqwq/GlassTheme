@@ -72,7 +72,8 @@
 .gt-icon-group > .gt-icon {
   position: absolute;
 }
-.gt-icon, .gt-icon-group {
+.gt-icon,
+.gt-icon-group {
   transition: filter .3s;
 }
 

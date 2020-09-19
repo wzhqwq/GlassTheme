@@ -2,7 +2,7 @@ class tbkOther {
   #width;
   get width() { return this.#width; };
 
-  constructor (width) {
+  constructor(width) {
     this.#width = width;
   }
 }
@@ -54,7 +54,7 @@ class tbkBar {
       let title = now.tools[titleTool];
       if (!title) throw new Error(ehh + 'inexistent tool');
       if (!(title.tool instanceof tbkTool || title.tool instanceof tbkGroup)) throw new Error(ehh + 'illegal tool');
-      
+
       let content = title.tool.tool
       titleWrap.innerHTML = (title.tool instanceof tbkTool ? content : content.slice(content.indexOf('">') + 2, -6)).replace(/ (id|title|tabindex)="[^\s]*/g, '');
       setTimeout(() => {
@@ -164,7 +164,7 @@ class tbkView {
       throw new Error(eh + 'illegal tool');
     if (this.tools[toolObj.name]) throw new Error(eh + 'tool name repeat: ' + toolObj.name);
     this.#view.innerHTML += toolObj.tool;
-    this.tools[toolObj.name] = {tool : toolObj, click : click, l : this.#width};
+    this.tools[toolObj.name] = { tool: toolObj, click: click, l: this.#width };
     this.#width += toolObj.width;
     this.#view.style.width = `${this.#width}px`;
     this.#count++;
@@ -172,7 +172,7 @@ class tbkView {
 
     if (toolObj instanceof tbkGroup) {
       if (click) toolObj.tools[toolObj.name].click = click;
-      let trigger = (this.tools[toolObj.name].pop = new aniTemporaryPop(toolObj.pop, {preserve: true, position: {x: 2, y: 2}, appendTo: toolObj.pop.firstChild, popupStyle: 'border-radius: 10px;'}, null, () => {
+      let trigger = (this.tools[toolObj.name].pop = new aniTemporaryPop(toolObj.pop, { preserve: true, position: { x: 2, y: 2 }, appendTo: toolObj.pop.firstChild, popupStyle: 'border-radius: 10px;' }, null, () => {
         // 背后的高亮消失
         view.firstChild.style.filter = 'opacity(0)';
       })).tabEnterHandler;
@@ -197,7 +197,7 @@ class tbkTool {
   get tool() { return this.#tool; };
   get color() { return this.#color; };
   get isOn() { return this.#isOn; };
-  
+
   // name icon [attach color shadow title]
   constructor(obj) {
     var ehh = eh + 'When creating Tool: ';
@@ -263,14 +263,14 @@ class tbkGroup {
 
   constructor(firstTool) {
     if (!(firstTool instanceof tbkTool)) throw new Error(eh + "please use Tool to create Group");
-    this.tools[firstTool.name] = {tool: firstTool};
+    this.tools[firstTool.name] = { tool: firstTool };
     this.#tool += `${++tbk_group_cnt}">${firstTool.tool}</div>`;
     this.id = tbk_group_cnt;
     this.#pop.className = 'gt-tool-grouppop';
     this.#pop.style.width = '44px';
     this.#pop.innerHTML = '<div style="width: 40px; height: 40px; margin-bottom: -2px;"></div>'
     this.#name = firstTool.name;
-    
+
     var tools = this.tools;
     this.#pop.addEventListener('click', function (e) {
       var t = tools[e.target.id.split('-').pop()];
@@ -278,10 +278,10 @@ class tbkGroup {
       e.stopPropagation();
     });
   }
-  
+
   append(tool, click) {
     if (!(tool instanceof tbkTool)) throw new Error(eh + "please append Tool to Group");
-    this.tools[tool.name] = {tool: tool, click: click};
+    this.tools[tool.name] = { tool: tool, click: click };
     this.#pop.innerHTML += tool.tool;
     this.#count++;
   }
