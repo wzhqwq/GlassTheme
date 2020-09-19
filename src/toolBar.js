@@ -106,7 +106,7 @@ class tbkBar {
 var viewC = 0;
 class tbkView {
   tools = {};
-  // disabled = false;
+  disabled = false; // 控制是否禁用高亮与弹出
   #count = 0;
   #width = 0;
   #view = document.createElement("div");
@@ -122,7 +122,7 @@ class tbkView {
     var vc = viewC++;
     view.innerHTML += `<div class="gt-toolbar-hover"></div>`;
     view.addEventListener('mouseover', function (e) {
-      // if (thisObj.disabled) return;
+      if (thisObj.disabled) return;
       if (!hover) hover = view.firstChild;
       var t = tools[e.target.id.match(/(?<=tool-[abm]?-)[^\s]*/) || ''];
       if (!t) return;
@@ -135,7 +135,7 @@ class tbkView {
       hover.style.filter = 'opacity(0)';
     });
     view.addEventListener('click', function (e) {
-      // if (thisObj.disabled) return;
+      if (thisObj.disabled) return;
       var t = tools[e.target.id.match(/(?<=tool-)[^\s]*/) || ''];
       if (t) {
         if (t.pop) t.pop.clickHandler(t.shell);
@@ -143,7 +143,7 @@ class tbkView {
       }
     });
     view.addEventListener('mousemove', function (e) {
-      // if (thisObj.disabled) return;
+      if (thisObj.disabled) return;
       var t = tools[e.target.id.match(/(?<=tool-[abm]?-)[^\s]*/) || ''];
       if (t && t.pop) t.pop.mousemoveHandler(t.shell);
     });
