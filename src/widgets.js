@@ -1,10 +1,11 @@
-// 收集带有gtw-开头的控件
+// 收集带有gtw-开头的基本控件
 var widgets = new Map();
 gt(function () {
   var wig = document.body.innerHTML.match(/(?<=id="gtw-)[^"]*/g);
   if (!wig) return;
   wig.forEach(name => {
-    widgets.set(name, { obj: null });
+    if (!widgets.has(name))
+      widgets.set(name, { obj: null });
   });
 });
 
@@ -13,10 +14,10 @@ function get_size_class(value) {
   var size = '';
   switch (value) {
     case 'large':
-      size = ' gt-lg';
+      size = 'gt-lg';
       break;
     case 'small':
-      size = ' gt-sm';
+      size = 'gt-sm';
   }
   return size;
 }
@@ -50,7 +51,7 @@ class Widget {
       let el = this.dom;
       this.html = el.outerHTML;
       // value
-      if (value === null)
+      if (value === null || typeof value == 'undefined')
         this.#value = el.innerHTML || el.value;
       else
         valueSetter[0].call(el, this.#value = value);
@@ -65,13 +66,13 @@ class Widget {
   }
 
   value(value) {
-    if (value === null) return this.#value;
+    if (value === null || typeof value == 'undefined') return this.#value;
 
     this.#value = value;
     if (!this.#rendered)
-      this.html = this.html.replace(this.#setter[1], value);
+      this.html = this.html.replace(this.#setter[1], value ? value : '');
     else
-      this.#setter[0].call(this.dom, value);
+      this.#setter[0].call(this.dom, value ? value : '');
     return this;
   }
   width(value) {
@@ -80,7 +81,7 @@ class Widget {
 
     if (!this.#rendered) {
       let pos = this.html.indexOf('style="');
-      this.html = pos == -1 ? this.html.replace(/id="/, `style="width: ${value}" id="`) : this.html.replace(/width: [^;"]*/, '').replace(/style="/, `style="width: ${value}; `);
+      this.html = pos == -1 ? this.html.replace('>', ` style="width: ${value};">`) : this.html.replace(/[\s]*width:[^;"]*[;]*/, '').replace(/style="/, `style="width: ${value}; `);
     }
     else
       this.dom.style.width = value;
@@ -89,21 +90,28 @@ class Widget {
   size(value) {
     if (!this.#rendered) {
       let pos = this.html.indexOf('class="');
-      this.html = pos == -1 ? this.html.replace(/id="/, `class="${get_size_class(value)}" id="`) : this.html.replace(/gt-[lgsm]{2,2}/, '').replace(/class="/, `class="${get_size_class(value)}`);
+      this.html = pos == -1 ? this.html.replace('>', ` class="${get_size_class(value)}">`) : this.html.replace(/[\s]*gt-[lgsm]{2,2}/, '').replace(/class="[\s]*/, `class="${get_size_class(value)} `);
     }
     else
-      this.dom.className = this.domTemp.className.replace(/gt-[lgsm]{2,2}/, '') + get_size_class(value);
+      this.dom.className = (this.domTemp.className.replace(/[\s]*gt-[lgsm]{2,2}/, '') + ' ' + get_size_class(value)).replace(/^\s/, '');
     return this;
   }
   color(value) {
     value = value || 'none';
     if (!this.#rendered) {
       let pos = this.html.indexOf('class="');
-      this.html = pos == -1 ? this.html.replace(/id="/, `class="gtc-${value}" id="`) : this.html.replace(/gtc-[^/s]/, '').replace(/class="/, `class="gtc-${value} `);
+      this.html = pos == -1 ? this.html.replace('>', ` class="gtc-${value}">`) : this.html.replace(/[\s]*gtc-[^\s"]*/, '').replace(/class="[\s]*/, `class="gtc-${value} `);
     }
     else
-      this.dom.className = this.domTemp.className.replace(/gtc-[^/s]/, '') + ' gtc-' + value;
+      this.dom.className = (this.domTemp.className.replace(/[\s]*gtc-[^\s]*/, '') + ' gtc-' + value).replace(/^\s/, '');
     return this;
+  }
+  disable(value) {
+    if (this.rendered)
+      this.dom.disabled = !!value;
+    else
+      this.html.replace(/disabled="[^"]*"/).replace('>', `disabled="${value ? 'true' : ''}"`);
+      return this;
   }
 
   afterRendering(element) {
@@ -118,6 +126,7 @@ class Widget {
 
   afterRemoved(element) {
     this.#rendered = false;
+    this.html = element.innerHTML;
     for (let listener_name in this.#listeners) {
       if (listener_name == 'click' && this.group_widget) continue;
       let t = this.#listeners[listener_name].handler;
@@ -141,6 +150,29 @@ class Widget {
         }
       };
     }
+    return this;
+  }
+  unbind(type, listener) {
+    let t = this.#listeners[type];
+    if (t)
+      for (var i = t.length - 1; i >= 0; i--)
+        if (t[i] == listener) {
+          t.splice(i, 1);
+          break;
+        }
+  }
+
+  click(listener) {
+    this.on('click', listener);
+    return this;
+  }
+  focus(listener) {
+    this.on('focus', listener);
+    return this;
+  }
+  blur(listener) {
+    this.on('blur', listener);
+    return this;
   }
 }
 
@@ -194,10 +226,38 @@ class wgtButton extends Widget {
   }
 }
 
+// 选框，value为布尔值
+class wgtCheckbox extends Widget {
+  constructor(name, value) {
+    super(
+      name, null,
+      (name) => `<input id="gtw-${name}" class="gt-checkbox" checked="${value ? 'true' : ''}">`
+    );
+    Object.defineProperty(this, 'value', {
+      value: this.set,
+      configurable: false,
+      writable: false
+    });
+  }
+
+  set(value) {
+    if (this.rendered)
+      this.dom.checked = !!value;
+    else
+      this.html.replace(/checked="[^"]*"/).replace('>', `checked="${value ? 'true' : ''}"`);
+      return this;
+  }
+}
+
+// 开关，value为布尔值
+
+// 控件组，可以委托点击事件
+class wgtGroup {
+
+}
+
 gt.Widget = function (name) {
-  if (widgets.has(name))
-    return widgets.get(name).obj;
-  return null;
+  return widgets.has(name) ? widgets.get(name).obj : null;
 }
 
 gt.Widget.Text = wgtText;

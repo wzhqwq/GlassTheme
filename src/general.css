@@ -3,7 +3,7 @@
   --bgC: #111 !important;
   --priC: #333;
   --secC: #444;
-  --priB: #333A;
+  --priB: #333D;
   --secB: #444A;
   --fullR: #DDD;
   --halfR: #AAA;
@@ -18,7 +18,7 @@
   --bgC: #FAFAFA !important;
   --priC: #EEE;
   --secC: #DDD;
-  --priB: #EEEA;
+  --priB: #EEED;
   --secB: #DDDA;
   --fullR: #333;
   --halfR: #666;
@@ -28,6 +28,15 @@
   --red: #F22;
   --brown: #910;
   --hover: .9;
+}
+.gtc-light *,
+.gtc-dark * {
+  --bgC: var(--fullR);
+  color: var(--bgC);
+}
+.gtc-light,
+.gtc-dark {
+  --theme: var(--fullR);
 }
 .gtc-dark *::selection {
   background-color: #38F;
@@ -75,6 +84,10 @@
 .gt-icon,
 .gt-icon-group {
   transition: filter .3s;
+}
+
+.gt-theme {
+  --theme: var(--bgC);
 }
 
 .gt-rev {

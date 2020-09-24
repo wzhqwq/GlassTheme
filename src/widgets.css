@@ -49,13 +49,19 @@
   border: 2px transparent solid;
   color: var(--fgC);
   cursor: pointer;
-  transition: transform .2s ease-out;
+  transition: all .2s ease-out;
 }
 .gt-btn:focus,
 .gt-input[type="button"]:focus,
 .gt-input[type="checkbox"]:focus {
   border-color: var(--fullR) !important;
   transform: scale(.95);
+}
+.gt-btn:disabled,
+.gt-input:disabled {
+  filter: opacity(.5);
+  --fgC: gray;
+  cursor: not-allowed;
 }
 /* 单行输入框控件 */
 .gt-input[type="text"] {
@@ -68,15 +74,21 @@
   border-color: var(--bgC);
 }
 /* 多选框控件 */
-.gt-input[type="checkbox"] {
+.gt-input[type="checkbox"],
+.gt-input[type="ratio"] {
   appearance: none;
   border: 1px var(--secB) solid;
   background-color: var(--secB);
   width: 16px;
   height: 16px;
-  cursor: grab;
-  border-radius: 5px;
+  cursor: pointer;
   padding: 0;
+}
+.gt-iput[type="checkbox"] {
+  border-radius: 5px;
+}
+.gt-iput[type="ratio"] {
+  border-radius: 8px;
 }
 .gt-input[type="checkbox"]:checked {
   background-color: var(--blue);

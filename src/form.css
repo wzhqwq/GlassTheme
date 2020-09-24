@@ -1,0 +1,22 @@
+.gt-form-block {
+
+}
+.gt-form-title {
+
+}
+.gt-form-msg {
+
+}
+
+.gt-form-warning > .gt-form-msg {
+  color: var(--orange);
+}
+.gt-form-danger > .gt-form-msg {
+  color: var(--red);
+}
+.gt-form-warning > .gt-input {
+  border-color: var(--orange);
+}
+.gt-form-danger > .gt-input {
+  border-color: var(--red);
+}

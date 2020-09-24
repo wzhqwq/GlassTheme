@@ -51,8 +51,13 @@ var wait_dom = new Map(), exist_dom = new Map();
 var obsvr = new MutationObserver(node_handler);
 // 同样也可以向未加入DOM的元素加入
 function render(dest, gtObject) {
+  obsvr.observe(dest, { childList: true });
+  dest.innerHTML = get_html(gtObject);
+  return this;
+}
+function get_html(gtObject) {
   if (!(gtObject instanceof Array)) gtObject = [gtObject];
-  var output = ''
+  var output = '';
   gtObject.forEach(o => {
     if (!o.html || !o.id) throw new Error(eh + 'Rendering a nonstandard GlassTheme object.');
     if (wait_dom.has(o.id)) return;
@@ -60,10 +65,8 @@ function render(dest, gtObject) {
     wait_dom.set(o.id, o);
     output += o.html;
   });
-  obsvr.observe(dest, { childList: true });
-  dest.innerHTML = output;
 
-  return this;
+  return output;
 }
 /*// 准备加入的功能
 var insert_wait_zone = document.createElement('div'); 

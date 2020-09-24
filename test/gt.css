@@ -3,7 +3,7 @@
   --bgC: #111 !important;
   --priC: #333;
   --secC: #444;
-  --priB: #333A;
+  --priB: #333D;
   --secB: #444A;
   --fullR: #DDD;
   --halfR: #AAA;
@@ -18,7 +18,7 @@
   --bgC: #FAFAFA !important;
   --priC: #EEE;
   --secC: #DDD;
-  --priB: #EEEA;
+  --priB: #EEED;
   --secB: #DDDA;
   --fullR: #333;
   --halfR: #666;
@@ -28,6 +28,15 @@
   --red: #F22;
   --brown: #910;
   --hover: .9;
+}
+.gtc-light *,
+.gtc-dark * {
+  --bgC: var(--fullR);
+  color: var(--bgC);
+}
+.gtc-light,
+.gtc-dark {
+  --theme: var(--fullR);
 }
 .gtc-dark *::selection {
   background-color: #38F;
@@ -72,8 +81,13 @@
 .gt-icon-group > .gt-icon {
   position: absolute;
 }
-.gt-icon, .gt-icon-group {
+.gt-icon,
+.gt-icon-group {
   transition: filter .3s;
+}
+
+.gt-theme {
+  --theme: var(--bgC);
 }
 
 .gt-rev {
@@ -272,13 +286,19 @@
   border: 2px transparent solid;
   color: var(--fgC);
   cursor: pointer;
-  transition: transform .2s ease-out;
+  transition: all .2s ease-out;
 }
 .gt-btn:focus,
 .gt-input[type="button"]:focus,
 .gt-input[type="checkbox"]:focus {
   border-color: var(--fullR) !important;
   transform: scale(.95);
+}
+.gt-btn:disabled,
+.gt-input:disabled {
+  filter: opacity(.5);
+  --fgC: gray;
+  cursor: not-allowed;
 }
 /* 单行输入框控件 */
 .gt-input[type="text"] {
@@ -291,15 +311,21 @@
   border-color: var(--bgC);
 }
 /* 多选框控件 */
-.gt-input[type="checkbox"] {
+.gt-input[type="checkbox"],
+.gt-input[type="ratio"] {
   appearance: none;
   border: 1px var(--secB) solid;
   background-color: var(--secB);
   width: 16px;
   height: 16px;
-  cursor: grab;
-  border-radius: 5px;
+  cursor: pointer;
   padding: 0;
+}
+.gt-iput[type="checkbox"] {
+  border-radius: 5px;
+}
+.gt-iput[type="ratio"] {
+  border-radius: 8px;
 }
 .gt-input[type="checkbox"]:checked {
   background-color: var(--blue);
@@ -315,4 +341,26 @@
 .gt-input[type="checkbox"]:checked::before {
   -webkit-mask-image: url('data:image/svg+xml;utf8,%3C?xml%20version=%221.0%22%20encoding=%22UTF-8%22%20standalone=%22no%22?%3E%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20xml:space=%22preserve%22%20version=%221.1%22%20viewBox=%220%200%2016%2016%22%3E%3Cpath%20stroke=%22black%22%20stroke-width=%222%22%20d=%22M3.20829+8.79045L6.69632+12.1959L13.006+4.95793%22%20fill=%22none%22%20stroke-linecap=%22round%22%20opacity=%221%22%20stroke-linejoin=%22round%22/%3E%3C/svg%3E');
   background-color: var(--fullR);
+}
+.gt-form-block {
+
+}
+.gt-form-title {
+
+}
+.gt-form-msg {
+
+}
+
+.gt-form-warning > .gt-form-msg {
+  color: var(--orange);
+}
+.gt-form-danger > .gt-form-msg {
+  color: var(--red);
+}
+.gt-form-warning > .gt-input {
+  border-color: var(--orange);
+}
+.gt-form-danger > .gt-input {
+  border-color: var(--red);
 }

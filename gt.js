@@ -27,7 +27,7 @@ window.addEventListener('keydown', function (e) {
     case 27:  // escape
       if (pop_on_show)
         pop_on_show();
-      // else
+    // else
   }
 });
 
@@ -57,19 +57,22 @@ var wait_dom = new Map(), exist_dom = new Map();
 var obsvr = new MutationObserver(node_handler);
 // 同样也可以向未加入DOM的元素加入
 function render(dest, gtObject) {
+  obsvr.observe(dest, { childList: true });
+  dest.innerHTML = get_html(gtObject);
+  return this;
+}
+function get_html(gtObject) {
   if (!(gtObject instanceof Array)) gtObject = [gtObject];
-  var output = ''
+  var output = '';
   gtObject.forEach(o => {
     if (!o.html || !o.id) throw new Error(eh + 'Rendering a nonstandard GlassTheme object.');
     if (wait_dom.has(o.id)) return;
-    
+
     wait_dom.set(o.id, o);
     output += o.html;
   });
-  obsvr.observe(dest, { childList: true });
-  dest.innerHTML = output;
 
-  return this;
+  return output;
 }
 /*// 准备加入的功能
 var insert_wait_zone = document.createElement('div'); 
@@ -249,13 +252,14 @@ function checkPNumP(eh, obj, arr) {
       this.element.style[i] = this.t[i];
   });
 })(gt, eh); */
-// 收集带有gtw-开头的控件
+// 收集带有gtw-开头的基本控件
 var widgets = new Map();
 gt(function () {
   var wig = document.body.innerHTML.match(/(?<=id="gtw-)[^"]*/g);
   if (!wig) return;
   wig.forEach(name => {
-    widgets.set(name, {obj: null});
+    if (!widgets.has(name))
+      widgets.set(name, { obj: null });
   });
 });
 
@@ -264,10 +268,10 @@ function get_size_class(value) {
   var size = '';
   switch (value) {
     case 'large':
-      size = ' gt-lg';
+      size = 'gt-lg';
       break;
     case 'small':
-      size = ' gt-sm';
+      size = 'gt-sm';
   }
   return size;
 }
@@ -286,7 +290,7 @@ class Widget {
   get name() { return this.#name; }
   get id() { return 'gtw-' + this.#name; }
 
-  constructor (name, value, genFn, valueSetter, valueUpdter) {
+  constructor(name, value, genFn, valueSetter, valueUpdter) {
     if (!name) throw new Error(eh + 'Illegal widget name.');
     this.#name = name;
     this.#setter = valueSetter;
@@ -301,7 +305,7 @@ class Widget {
       let el = this.dom;
       this.html = el.outerHTML;
       // value
-      if (value === null)
+      if (value === null || typeof value == 'undefined')
         this.#value = el.innerHTML || el.value;
       else
         valueSetter[0].call(el, this.#value = value);
@@ -312,17 +316,17 @@ class Widget {
       this.html = genFn(name, this.#value = value || '');
       this.#rendered = false;
     }
-    widgets.set(name, {obj: this});
+    widgets.set(name, { obj: this });
   }
 
   value(value) {
-    if (value === null) return this.#value;
+    if (value === null || typeof value == 'undefined') return this.#value;
 
     this.#value = value;
     if (!this.#rendered)
-      this.html = this.html.replace(this.#setter[1], value);
+      this.html = this.html.replace(this.#setter[1], value ? value : '');
     else
-      this.#setter[0].call(this.dom, value);
+      this.#setter[0].call(this.dom, value ? value : '');
     return this;
   }
   width(value) {
@@ -331,7 +335,7 @@ class Widget {
 
     if (!this.#rendered) {
       let pos = this.html.indexOf('style="');
-      this.html = pos == -1 ? this.html.replace(/id="/, `style="width: ${value}" id="`) : this.html.replace(/width: [^;"]*/, '').replace(/style="/, `style="width: ${value}; `);
+      this.html = pos == -1 ? this.html.replace('>', ` style="width: ${value};">`) : this.html.replace(/[\s]*width:[^;"]*[;]*/, '').replace(/style="/, `style="width: ${value}; `);
     }
     else
       this.dom.style.width = value;
@@ -340,24 +344,31 @@ class Widget {
   size(value) {
     if (!this.#rendered) {
       let pos = this.html.indexOf('class="');
-      this.html = pos == -1 ? this.html.replace(/id="/, `class="${get_size_class(value)}" id="`) : this.html.replace(/gt-[lgsm]{2,2}/, '').replace(/class="/, `class="${get_size_class(value)}`);
+      this.html = pos == -1 ? this.html.replace('>', ` class="${get_size_class(value)}">`) : this.html.replace(/[\s]*gt-[lgsm]{2,2}/, '').replace(/class="[\s]*/, `class="${get_size_class(value)} `);
     }
     else
-      this.dom.className = this.domTemp.className.replace(/gt-[lgsm]{2,2}/, '') + get_size_class(value);
+      this.dom.className = (this.domTemp.className.replace(/[\s]*gt-[lgsm]{2,2}/, '') + ' ' + get_size_class(value)).replace(/^\s/, '');
     return this;
   }
   color(value) {
     value = value || 'none';
     if (!this.#rendered) {
       let pos = this.html.indexOf('class="');
-      this.html = pos == -1 ? this.html.replace(/id="/, `class="gtc-${value}" id="`) : this.html.replace(/gtc-[^/s]/, '').replace(/class="/, `class="gtc-${value} `);
+      this.html = pos == -1 ? this.html.replace('>', ` class="gtc-${value}">`) : this.html.replace(/[\s]*gtc-[^\s"]*/, '').replace(/class="[\s]*/, `class="gtc-${value} `);
     }
     else
-      this.dom.className = this.domTemp.className.replace(/gtc-[^/s]/, '') + ' gtc-' + value;
+      this.dom.className = (this.domTemp.className.replace(/[\s]*gtc-[^\s]*/, '') + ' gtc-' + value).replace(/^\s/, '');
     return this;
   }
+  disable(value) {
+    if (this.rendered)
+      this.dom.disabled = !!value;
+    else
+      this.html.replace(/disabled="[^"]*"/).replace('>', `disabled="${value ? 'true' : ''}"`);
+      return this;
+  }
 
-  afterRendering (element) {
+  afterRendering(element) {
     this.#rendered = true;
     for (let listener_name in this.#listeners) {
       if (listener_name == 'click' && this.group_widget) continue;
@@ -366,9 +377,10 @@ class Widget {
         element.addEventListener(listener_name, t);
     }
   }
-  
-  afterRemoved (element) {
+
+  afterRemoved(element) {
     this.#rendered = false;
+    this.html = element.innerHTML;
     for (let listener_name in this.#listeners) {
       if (listener_name == 'click' && this.group_widget) continue;
       let t = this.#listeners[listener_name].handler;
@@ -377,7 +389,7 @@ class Widget {
     }
   }
 
-  on (type, listener) {
+  on(type, listener) {
     let t = this.#listeners[type];
     if (t && t.list)
       this.#listeners[type].list.push(listener);
@@ -392,12 +404,35 @@ class Widget {
         }
       };
     }
+    return this;
+  }
+  unbind(type, listener) {
+    let t = this.#listeners[type];
+    if (t)
+      for (var i = t.length - 1; i >= 0; i--)
+        if (t[i] == listener) {
+          t.splice(i, 1);
+          break;
+        }
+  }
+
+  click(listener) {
+    this.on('click', listener);
+    return this;
+  }
+  focus(listener) {
+    this.on('focus', listener);
+    return this;
+  }
+  blur(listener) {
+    this.on('blur', listener);
+    return this;
   }
 }
 
 // 文本框对象
 class wgtText extends Widget {
-  constructor (name, value) {
+  constructor(name, value) {
     super(
       name, value,
       (name, value) => `<span id="gtw-${name}" class="gt-text">${value}</span>`,
@@ -410,7 +445,7 @@ class wgtText extends Widget {
 class wgtInputBox extends Widget {
   #hint;
 
-  constructor (name, value) {
+  constructor(name, value) {
     super(
       name, value,
       (name, value) => `<input type="text" id="gtw-${name}" class="gt-input" value="${value}">`,
@@ -434,7 +469,7 @@ class wgtInputBox extends Widget {
 
 // 按钮，可以监听点击事件
 class wgtButton extends Widget {
-  constructor (name, value) {
+  constructor(name, value) {
     super(
       name, value,
       (name, value) => `<button id="gtw-${name}" class="gt-btn">${value}</button>`,
@@ -445,15 +480,131 @@ class wgtButton extends Widget {
   }
 }
 
+// 选框，value为布尔值
+class wgtCheckbox extends Widget {
+  constructor(name, value) {
+    super(
+      name, null,
+      (name) => `<input id="gtw-${name}" class="gt-checkbox" checked="${value ? 'true' : ''}">`
+    );
+    Object.defineProperty(this, 'value', {
+      value: this.set,
+      configurable: false,
+      writable: false
+    });
+  }
+
+  set(value) {
+    if (this.rendered)
+      this.dom.checked = !!value;
+    else
+      this.html.replace(/checked="[^"]*"/).replace('>', `checked="${value ? 'true' : ''}"`);
+      return this;
+  }
+}
+
+// 开关，value为布尔值
+
+// 控件组，可以委托点击事件
+class wgtGroup {
+
+}
+
 gt.Widget = function (name) {
-  if (widgets.has(name))
-    return widgets.get(name).obj;
-  return null;
+  return widgets.has(name) ? widgets.get(name).obj : null;
 }
 
 gt.Widget.Text = wgtText;
 gt.Widget.InputBox = wgtInputBox;
 gt.Widget.Button = wgtButton;
+// 收集以gtf-开头的表单控件
+var forms = new Map();
+gt(function () {
+  var fms = document.body.innerHTML.match(/(?<=id="gtf-)[^"]*/g);
+  if (!fms) return;
+  fms.forEach(name => {
+    forms.set(name, { obj: null });
+  })
+});
+
+// 控件块，name为相应控件的name
+class fmFormBlock {
+  html;
+  domTemp;
+  #name;
+  #rendered;
+  #widget;
+
+  get name() { return this.#name; }
+  get id() { return 'gtf-' + this.#name; }
+  get dom() { return this.domTemp || get_element(this); }
+  get rendered() { return this.#rendered; }
+
+  constructor(name, title) {
+    if (!widgets.has(name))
+      throw new Error(eh + `It's an unknown name(${name}) of widget to bind the block.`);
+    this.#name = name;
+    var t1 = this.#widget = widgets.get(name).obj;
+    if (t1 === null)
+      throw new Error(eh + `The widget named '${name}' is not initialized.`);
+    if (forms.has(name)) {
+      this.html = this.dom.outerHTML;
+      this.#rendered = true;
+      return;
+    }
+    
+    this.html = `<div class="gt-form-block" id="gtf-${name}"><label class="gt-form-title">${title}</label>${get_html(t1)}<div class="gt-form-msg"></div></div>`;
+    this.#rendered = false;
+
+    this.value = t1.value;
+  }
+
+  #show(msg, color) {
+    if (this.#rendered) {
+      let tip = this.dom.children[2];
+      tip.innerHTML = msg;
+      this.dom.className = this.dom.className.split(' ')[0] + (color ? ` gt-form-${color}` : '');
+    }
+    else
+      this.html = this.html.replace(/(?<=>)[^<]*</, msg + '<').replace(/(?<=gt-form-block)[^>]*/, color ? '"' : ` gt-form-${color}"`);
+    this.#widget.color(color);
+  }
+
+  tip(msg) {
+    this.#show(msg);
+  }
+  warn(msg) {
+    this.#show(msg, 'warning');
+  }
+  err(msg) {
+    this.#show(msg, 'danger');
+  }
+  color(color) {
+    if (this.#rendered) {
+      let tip = this.dom.children[2];
+      tip.className = tip.className.split(' ')[0] + (color ? ` gtc-${color}` : '');
+    }
+    else
+      this.html = this.html.replace(/(?<=gt-form-msg)[^>]*/, color ? '"' : ` gtc-${color}"`);
+    this.#widget.color(color);
+  }
+}
+
+// 选框组，统一控制选框控件，输出选择情况，选框类型必须和选框组类型相符
+class fmCbGroup {
+  #name;
+  #boxes;
+
+  constructor(name, multi) {
+    
+  }
+}
+
+gt.Form = function (name) {
+  return forms.has(name) ? fms.get(name).obj : null;
+}
+
+gt.Form.FormBlock = fmFormBlock;
 var res = {};
 var maps = [];
 var unmMask = {};
@@ -466,9 +617,9 @@ gt.loadImage = function (name, path, path2x) {
   if (res[name]) throw new Error(eh + `resourse name repeat: ${name}`);
 
   var p = new Promise(function (rsv, rej) {
-    res[name] = {type: 0, path: retina && path2x ? path2x : path};
+    res[name] = { type: 0, path: retina && path2x ? path2x : path };
     var image = new Image();
-    image.onload = function() {
+    image.onload = function () {
       res[name].w = image.width;
       res[name].h = image.height;
       rsv();
@@ -487,19 +638,19 @@ gt.loadSpriteMap = function (info, path, path2x) {
     function ok(rsv) {
       checkP(ehh, info, ['width', 'height', 'rows']);
       checkPNumP(ehh, info, ['width', 'height']);
-  
+
       if (!info.rows instanceof Array || !info.rows.length) {
         throw new Error(ehh + 'Illegal rows array');
       }
-    
+
       var w = info.width, h = info.height, r = info.rows, i = 0;
       r.forEach(function (col) {
         var j = 0;
         col.forEach(function (item) {
           if (res[item.name]) throw new Error(ehh + `resourse name repeat: ${name}`);
-  
+
           var name = item.name;
-          res[name] = {type : 1, path : maps.length, color : item.color, x : j, y : i, w : w, h : h};
+          res[name] = { type: 1, path: maps.length, color: item.color, x: j, y: i, w: w, h: h };
           if (unmMask[name]) res[name].mask = unmMask[name];
           j += w;
         });
@@ -516,19 +667,19 @@ gt.loadSpriteMap = function (info, path, path2x) {
           col.forEach(function (item) {
             item.split(',').forEach(function (item) {
               if (res[item])
-                res[item].mask = {path : maps.length, x : j, y : i, w : w, h : h};
+                res[item].mask = { path: maps.length, x: j, y: i, w: w, h: h };
               else
-                unmMask[item] = {path : maps.length, x : j, y : i, w : w, h : h};
-              });
-              j += w;
+                unmMask[item] = { path: maps.length, x: j, y: i, w: w, h: h };
+            });
+            j += w;
           });
           i += h;
         });
       }
-      
+
       var img = new Image();
       img.onload = function () {
-        maps.push({path : path, w : img.width, h : img.height});
+        maps.push({ path: path, w: img.width, h: img.height });
         rsv();
       };
       img.src = path;
@@ -583,7 +734,7 @@ gt.loadLiveSprite = function (name, path, path2x) {
   path = retina && path2x ? path2x : path;
   if (typeof path != 'string' || typeof path2x != 'string') throw new Error(ehh + "sprite path should be a string.");
 
-  
+
 }
 /*
 Animation Pop
@@ -622,14 +773,14 @@ class aniTemporaryPop {
     if (custom) {
       if (custom.resistance) resis = custom.resistance;
       if (custom.preserve) {
-        presrv = custom.position || {x: 0, y: 0, scale: 1};
+        presrv = custom.position || { x: 0, y: 0, scale: 1 };
         presrv.scale = presrv.scale || 1;
         if (!custom.appendTo) throw new Error(eh + "original element need to be appended to an element in the pop-up element when you choose to preserve it");
       }
     }
 
     var timer1 = 0, timer2 = 0, timer3 = 0, timer_fatal = 0, break_promise = false, now, origin, showing = false;
-    
+
     var fix1 = document.createElement("div");
     fix1.className = 'gt-fix1';
     fix1.style.display = 'none';
@@ -645,8 +796,8 @@ class aniTemporaryPop {
 
     var w1 = 0, h1 = 0, x1, y1, x2, y2;
     var w2 = parseInt(pop_up.style.width),
-    h21 = parseInt(pop_up.style.height) || parseInt(pop_up.style.minHeight),
-    h22 = parseInt(pop_up.style.height) || parseInt(pop_up.style.maxHeight);
+      h21 = parseInt(pop_up.style.height) || parseInt(pop_up.style.minHeight),
+      h22 = parseInt(pop_up.style.height) || parseInt(pop_up.style.maxHeight);
     var area = {}, fix11, fix12, fix21, fix22, fix23;
 
     if (resis.left == undefined) resis.left = -(1 << 30);
@@ -888,14 +1039,14 @@ class aniFixedPop {
     if (custom) {
       if (custom.resistance) resis = custom.resistance;
       if (custom.preserve) {
-        presrv = custom.position || {x: 0, y: 0, scale: 1};
+        presrv = custom.position || { x: 0, y: 0, scale: 1 };
         presrv.scale = presrv.scale || 1;
         if (!custom.appendTo) throw new Error(eh + "original element need to be appended to an element in the pop-up element when you choose to preserve it");
       }
     }
 
     var timer3, timer_fatal = 0, now, origin, showing = false;
-    
+
     var fix1 = document.createElement("div");
     fix1.className = 'gt-fix1';
     fix1.style.display = 'none';
@@ -909,8 +1060,8 @@ class aniFixedPop {
 
     var w1 = 0, h1 = 0, x1, y1, x2, y2;
     var w2 = parseInt(pop_up.style.width),
-    h21 = parseInt(pop_up.style.height) || parseInt(pop_up.style.minHeight),
-    h22 = parseInt(pop_up.style.height) || parseInt(pop_up.style.maxHeight);
+      h21 = parseInt(pop_up.style.height) || parseInt(pop_up.style.minHeight),
+      h22 = parseInt(pop_up.style.height) || parseInt(pop_up.style.maxHeight);
     var area = {}, fix11, fix12, fix21, fix22, fix23;
 
     if (resis.left == undefined) resis.left = -(1 << 30);
@@ -1044,7 +1195,7 @@ class tbkOther {
   #width;
   get width() { return this.#width; };
 
-  constructor (width) {
+  constructor(width) {
     this.#width = width;
   }
 }
@@ -1096,7 +1247,7 @@ class tbkBar {
       let title = now.tools[titleTool];
       if (!title) throw new Error(ehh + 'inexistent tool');
       if (!(title.tool instanceof tbkTool || title.tool instanceof tbkGroup)) throw new Error(ehh + 'illegal tool');
-      
+
       let content = title.tool.tool
       titleWrap.innerHTML = (title.tool instanceof tbkTool ? content : content.slice(content.indexOf('">') + 2, -6)).replace(/ (id|title|tabindex)="[^\s]*/g, '');
       setTimeout(() => {
@@ -1206,7 +1357,7 @@ class tbkView {
       throw new Error(eh + 'illegal tool');
     if (this.tools[toolObj.name]) throw new Error(eh + 'tool name repeat: ' + toolObj.name);
     this.#view.innerHTML += toolObj.tool;
-    this.tools[toolObj.name] = {tool : toolObj, click : click, l : this.#width};
+    this.tools[toolObj.name] = { tool: toolObj, click: click, l: this.#width };
     this.#width += toolObj.width;
     this.#view.style.width = `${this.#width}px`;
     this.#count++;
@@ -1214,7 +1365,7 @@ class tbkView {
 
     if (toolObj instanceof tbkGroup) {
       if (click) toolObj.tools[toolObj.name].click = click;
-      let trigger = (this.tools[toolObj.name].pop = new aniTemporaryPop(toolObj.pop, {preserve: true, position: {x: 2, y: 2}, appendTo: toolObj.pop.firstChild, popupStyle: 'border-radius: 10px;'}, null, () => {
+      let trigger = (this.tools[toolObj.name].pop = new aniTemporaryPop(toolObj.pop, { preserve: true, position: { x: 2, y: 2 }, appendTo: toolObj.pop.firstChild, popupStyle: 'border-radius: 10px;' }, null, () => {
         // 背后的高亮消失
         view.firstChild.style.filter = 'opacity(0)';
       })).tabEnterHandler;
@@ -1239,7 +1390,7 @@ class tbkTool {
   get tool() { return this.#tool; };
   get color() { return this.#color; };
   get isOn() { return this.#isOn; };
-  
+
   // name icon [attach color shadow title]
   constructor(obj) {
     var ehh = eh + 'When creating Tool: ';
@@ -1305,14 +1456,14 @@ class tbkGroup {
 
   constructor(firstTool) {
     if (!(firstTool instanceof tbkTool)) throw new Error(eh + "please use Tool to create Group");
-    this.tools[firstTool.name] = {tool: firstTool};
+    this.tools[firstTool.name] = { tool: firstTool };
     this.#tool += `${++tbk_group_cnt}">${firstTool.tool}</div>`;
     this.id = tbk_group_cnt;
     this.#pop.className = 'gt-tool-grouppop';
     this.#pop.style.width = '44px';
     this.#pop.innerHTML = '<div style="width: 40px; height: 40px; margin-bottom: -2px;"></div>'
     this.#name = firstTool.name;
-    
+
     var tools = this.tools;
     this.#pop.addEventListener('click', function (e) {
       var t = tools[e.target.id.split('-').pop()];
@@ -1320,10 +1471,10 @@ class tbkGroup {
       e.stopPropagation();
     });
   }
-  
+
   append(tool, click) {
     if (!(tool instanceof tbkTool)) throw new Error(eh + "please append Tool to Group");
-    this.tools[tool.name] = {tool: tool, click: click};
+    this.tools[tool.name] = { tool: tool, click: click };
     this.#pop.innerHTML += tool.tool;
     this.#count++;
   }
