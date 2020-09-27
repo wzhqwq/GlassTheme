@@ -29,8 +29,11 @@ class fmFormBlock {
     if (t1 === null)
       throw new Error(eh + `The widget named '${name}' is not initialized.`);
     if (forms.has(name)) {
+      if (forms.get(name).obj)
+        throw new Error(`name'${name}' has been bound.`);
       this.html = this.dom.outerHTML;
       this.#rendered = true;
+      forms.set(name, {obj: this});
       return;
     }
     
@@ -38,17 +41,17 @@ class fmFormBlock {
     this.#rendered = false;
 
     this.value = t1.value;
+    forms.set(name, {obj: this});
   }
 
   #show(msg, color) {
     if (this.#rendered) {
       let tip = this.dom.children[2];
       tip.innerHTML = msg;
-      this.dom.className = this.dom.className.split(' ')[0] + (color ? ` gt-form-${color}` : '');
+      this.dom.className = this.dom.className.split(' ')[0] + (msg ? (color ? ` gt-form-${color}` : ' gt-form-default') : '');
     }
     else
-      this.html = this.html.replace(/(?<=>)[^<]*</, msg + '<').replace(/(?<=gt-form-block)[^>]*/, color ? '"' : ` gt-form-${color}"`);
-    this.#widget.color(color);
+      this.html = this.html.replace(/(?<=>)[^<]*</, msg + '<').replace(/(?<=gt-form-block)[^>]*/, msg ? (color ? ` gt-form-${color}"` : ' gt-form-default"') : '');
   }
 
   tip(msg) {
@@ -82,7 +85,7 @@ class fmCbGroup {
 }
 
 gt.Form = function (name) {
-  return forms.has(name) ? fms.get(name).obj : null;
+  return forms.has(name) ? forms.get(name).obj : null;
 }
 
 gt.Form.FormBlock = fmFormBlock;

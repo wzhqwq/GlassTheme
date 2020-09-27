@@ -1,22 +1,40 @@
 .gt-form-block {
-
+  display: grid;
+  grid-template-columns: auto auto;
+  width: 0;
 }
 .gt-form-title {
-
+  font-weight: bold;
+  margin-right: 10px;
 }
 .gt-form-msg {
-
+  border-radius: 8px 0 8px 8px;
+  grid-column: span 2;
+  color: var(--fullR);
+  padding: 2px 10px;
+  margin-top: -1px;
 }
 
+.gt-form-default > .gt-form-msg {
+  background-color: #06F4;
+  border: 1px solid var(--blue);
+}
 .gt-form-warning > .gt-form-msg {
-  color: var(--orange);
+  background-color: #EE04;
+  border: 1px solid var(--orange);
 }
 .gt-form-danger > .gt-form-msg {
-  color: var(--red);
+  background-color: #E004;
+  border: 1px solid var(--red);
 }
 .gt-form-warning > .gt-input {
-  border-color: var(--orange);
+  border-color: var(--orange) !important;
 }
 .gt-form-danger > .gt-input {
-  border-color: var(--red);
+  border-color: var(--red) !important;
+}
+.gt-form-warning > .gt-input,
+.gt-form-danger > .gt-input,
+.gt-form-default > .gt-input {
+  border-radius: 10px 10px 0 0;
 }
