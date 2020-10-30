@@ -1,15 +1,6 @@
-// 收集带有gtw-开头的基本控件
-var widgets = new Map();
-gt(function () {
-  var wig = document.body.innerHTML.match(/(?<=id="gtw-)[^"]*/g);
-  if (!wig) return;
-  wig.forEach(name => {
-    if (!widgets.has(name))
-      widgets.set(name, { obj: null });
-  });
-});
+import {GlassTheme, eh} from "./../GlassTheme";
 
-// 控件对象，实现对主色、大小的控制，符合gtObject规范
+// 控件对象，实现对主色、大小的控制，符合gtComp
 function get_size_class(value) {
   var size = '';
   switch (value) {
@@ -21,18 +12,15 @@ function get_size_class(value) {
   }
   return size;
 }
-class Widget {
-  domTemp;
+class Widget extends GlassTheme {
   html;
   // 当组件成组时，组合组件可以托管点击事件, 渲染触发后会向组合组件更新点击事件
-  group_widget = false;
+  #click_entrusted = false;
   #rendered;
   #value;
   #name;
   #setter;
   #listeners = {};
-  get dom() { return this.domTemp || get_element(this); }
-  get rendered() { return this.#rendered; }
   get name() { return this.#name; }
   get id() { return 'gtw-' + this.#name; }
 
@@ -117,7 +105,7 @@ class Widget {
   afterRendering(element) {
     this.#rendered = true;
     for (let listener_name in this.#listeners) {
-      if (listener_name == 'click' && this.group_widget) continue;
+      if (listener_name == 'click' && this.#click_entrusted) continue;
       let t = this.#listeners[listener_name].handler;
       if (t)
         element.addEventListener(listener_name, t);
@@ -128,56 +116,16 @@ class Widget {
     this.#rendered = false;
     this.html = element.innerHTML;
     for (let listener_name in this.#listeners) {
-      if (listener_name == 'click' && this.group_widget) continue;
+      if (listener_name == 'click' && this.#click_entrusted) continue;
       let t = this.#listeners[listener_name].handler;
       if (t)
         element.removeEventListener(listener_name, t);
     }
   }
-
-  on(type, listener) {
-    let t = this.#listeners[type];
-    if (t && t.list)
-      this.#listeners[type].list.push(listener);
-    else {
-      let list = [listener];
-      this.#listeners[type] = {
-        list: list,
-        handler: e => {
-          list.forEach(listener => {
-            listener(e);
-          });
-        }
-      };
-    }
-    return this;
-  }
-  unbind(type, listener) {
-    let t = this.#listeners[type];
-    if (t)
-      for (var i = t.length - 1; i >= 0; i--)
-        if (t[i] == listener) {
-          t.splice(i, 1);
-          break;
-        }
-  }
-
-  click(listener) {
-    this.on('click', listener);
-    return this;
-  }
-  focus(listener) {
-    this.on('focus', listener);
-    return this;
-  }
-  blur(listener) {
-    this.on('blur', listener);
-    return this;
-  }
 }
 
 // 文本框对象
-class wgtText extends Widget {
+export class Text extends Widget {
   constructor(name, value) {
     super(
       name, value,
@@ -188,7 +136,7 @@ class wgtText extends Widget {
 }
 
 // 单行输入框，可以监听值的变化
-class wgtInputBox extends Widget {
+export class InputBox extends Widget {
   #hint;
 
   constructor(name, value) {
@@ -214,7 +162,7 @@ class wgtInputBox extends Widget {
 }
 
 // 按钮，可以监听点击事件
-class wgtButton extends Widget {
+export class Button extends Widget {
   constructor(name, value) {
     super(
       name, value,
@@ -226,12 +174,12 @@ class wgtButton extends Widget {
   }
 }
 
-// 选框，value为布尔值
-class wgtCheckbox extends Widget {
+// 复选框，value为布尔值
+export class Checkbox extends Widget {
   constructor(name, value) {
     super(
       name, null,
-      (name) => `<input id="gtw-${name}" class="gt-checkbox" checked="${value ? 'true' : ''}">`
+      (name) => `<input id="gtw-${name}" class="gt-input" checked="${value ? 'true' : ''}">`
     );
     Object.defineProperty(this, 'value', {
       value: this.set,
@@ -252,14 +200,62 @@ class wgtCheckbox extends Widget {
 // 开关，value为布尔值
 
 // 控件组，可以委托点击事件
-class wgtGroup {
+export class Group extends GlassTheme {
+  domTemp;
+  #html = "";
+  #widgets = new Map();
+  #size_class;
+  #size;
+  #name;
+  #width;
+  #height;
+  #direction;
+  #grow;
+  #style;
+  #className;
 
+  get dom() { return this.domTemp || get_element(this); }
+  get html() { return `<div class="${this.#className}"${this.#style}>${this.#html}</div>`; }
+  get name() { return this.#name; }
+  get id() { return `gtw-${this.#name}`; }
+
+  constructor(name, {width, height, size, direction, growable} = {}) {
+    this.#name = name;
+    this.#size_class = get_size_class(size || '');
+    this.#size = size || '';
+    this.#width = width;
+    this.#height = height;
+    this.#direction = direction == 'vertical' ? 'gt-vert' : '';
+    this.#grow = growable ? 'gt-grow' : '';
+    this.#className = `gtw-group ${this.#size_class}`;
+  }
+
+  #click_handler(e) {
+    var t = this.#widgets[(e.target.id.match(/(?<=gtw-)[^\s]*/) || [])[0]];
+    if (t) t.forEach(listener => listener());
+  }
+
+  append(gtComp{
+    if (!(gtCompnstanceof Widget))
+      throw new Error(eh + "You can only append widget to group.");
+    if (gtCompendered)
+      throw new Error(eh + "We can't append a rendered widget to group.");
+    gtCompize(this.#size);
+    this.#html += gtComptml;
+    var list = [];
+    list.push((gtCompssignClick({list: list}) || []).list);
+    this.#widgets.set(gtCompame, list);
+    return this;
+  }
+
+  afterRendering(element) {
+    element.addEventListener('click', this.#click_handler);
+  }
+  afterRemoved(element) {
+    element.removerEventListener('click', this.#click_handler);
+  }
 }
 
 gt.Widget = function (name) {
   return widgets.has(name) ? widgets.get(name).obj : null;
 }
-
-gt.Widget.Text = wgtText;
-gt.Widget.InputBox = wgtInputBox;
-gt.Widget.Button = wgtButton;

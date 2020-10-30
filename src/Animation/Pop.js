@@ -1,3 +1,5 @@
+import eh from "./../GlassTheme";
+
 /*
 Animation Pop
 场景：toolbar group的弹出（原地，blur）
@@ -21,7 +23,7 @@ Pop组件分为两个模式
 
 var temp_pop_abort = null;
 
-class aniTemporaryPop {
+export class TemporaryPop {
   mousemoveHandler;
   mouseleaveHandler;
   clickHandler;
@@ -289,7 +291,7 @@ class aniTemporaryPop {
   }
 }
 
-class aniFixedPop {
+export class FixedPop {
   clickHandler;
 
   constructor(pop_up, custom, onShow, onHide) {
@@ -450,6 +452,3 @@ class aniFixedPop {
     this.disappear = forceStop();
   }
 }
-
-gt.Animation.TemporaryPop = aniTemporaryPop;
-gt.Animation.FixedPop = aniFixedPop;

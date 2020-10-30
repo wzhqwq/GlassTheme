@@ -1,3 +1,5 @@
+import eh from "./../GlassTheme";
+
 var res = {};
 var maps = [];
 var unmMask = {};
@@ -5,7 +7,7 @@ var retina = window.devicePixelRatio > 1;
 
 // TYPE: 0image 1spriteMap 2liveSprite
 
-gt.loadImage = function (name, path, path2x) {
+export function loadImage (name, path, path2x) {
   if (typeof path != 'string' || typeof path2x != 'string') throw new Error(eh + "image path should be a string.");
   if (res[name]) throw new Error(eh + `resourse name repeat: ${name}`);
 
@@ -22,7 +24,7 @@ gt.loadImage = function (name, path, path2x) {
   return p;
 };
 
-gt.loadSpriteMap = function (info, path, path2x) {
+export function loadSpriteMap (info, path, path2x) {
   var ehh = eh + "when loading sprite map:";
   path = retina && path2x ? path2x : path;
   if (typeof path != 'string' || typeof path2x != 'string') throw new Error(ehh + "sprite map path should be a string.");
@@ -93,7 +95,7 @@ gt.loadSpriteMap = function (info, path, path2x) {
   return p;
 }
 
-function cssImage(name) {
+export function cssImage(name) {
   var o = res[name];
   var path = o.type ? maps[o.path].path : o.path;
   var style;
@@ -114,7 +116,7 @@ function cssImage(name) {
 
   return style;
 }
-function cssMask(name) {
+export function cssMask(name) {
   if (!res[name].mask) return;
   var o = res[name].mask;
   var style = `-webkit-mask-image: url(${maps[o.path].path}); width: ${o.w}px; height: ${o.h}px; -webkit-mask-position: -${o.x}px -${o.y}px; position: absolute;`
@@ -122,7 +124,7 @@ function cssMask(name) {
   return style;
 }
 
-gt.loadLiveSprite = function (name, path, path2x) {
+export function loadLiveSprite (name, path, path2x) {
   var ehh = eh + "when loading live sprite:";
   path = retina && path2x ? path2x : path;
   if (typeof path != 'string' || typeof path2x != 'string') throw new Error(ehh + "sprite path should be a string.");

@@ -1,3 +1,5 @@
+import { eh, GlassTheme } from "./../GlassTheme";
+
 class tbkOther {
   #width;
   get width() { return this.#width; };
@@ -7,7 +9,7 @@ class tbkOther {
   }
 }
 
-class tbkBar {
+export class Bar extends GlassTheme {
   views = {};
   #count = 0;
   #bar = document.createElement("div");
@@ -17,7 +19,7 @@ class tbkBar {
   get bar() { return this.#bar; };
 
   constructor(view) {
-    if (!(view instanceof tbkView))
+    if (!(view instanceof View))
       throw new Error(eh + 'Please append gt.toolbar.View to Bar');
     this.views[view.name] = view;
     var e = view.view;
@@ -34,7 +36,7 @@ class tbkBar {
   }
 
   append(view) {
-    if (!(view instanceof tbkView))
+    if (!(view instanceof View))
       throw new Error(eh + 'Please append gt.toolbar.View to Bar');
     this.views[view.name] = view;
     var e = view.view;
@@ -53,10 +55,10 @@ class tbkBar {
     if (titleTool) {
       let title = now.tools[titleTool];
       if (!title) throw new Error(ehh + 'inexistent tool');
-      if (!(title.tool instanceof tbkTool || title.tool instanceof tbkGroup)) throw new Error(ehh + 'illegal tool');
+      if (!(title.tool instanceof Tool || title.tool instanceof Group)) throw new Error(ehh + 'illegal tool');
 
       let content = title.tool.tool
-      titleWrap.innerHTML = (title.tool instanceof tbkTool ? content : content.slice(content.indexOf('">') + 2, -6)).replace(/ (id|title|tabindex)="[^\s]*/g, '');
+      titleWrap.innerHTML = (title.tool instanceof Tool ? content : content.slice(content.indexOf('">') + 2, -6)).replace(/ (id|title|tabindex)="[^\s]*/g, '');
       setTimeout(() => {
         now.view.style = `width: ${title.l + 40}px; z-index: ${stack.length}; margin-left: -${title.l}px; overflow: hidden;`;
         // now.disabled = true;
@@ -104,7 +106,7 @@ class tbkBar {
 
 // 自定义：onopen onclose
 var viewC = 0;
-class tbkView {
+export class View extends GlassTheme {
   tools = {};
   disabled = false; // 控制是否禁用高亮与弹出
   #count = 0;
@@ -160,7 +162,7 @@ class tbkView {
   }
 
   append(toolObj, click) {
-    if (!(toolObj instanceof tbkTool || toolObj instanceof tbkGroup || toolObj instanceof tbkOther))
+    if (!(toolObj instanceof Tool || toolObj instanceof Group || toolObj instanceof tbkOther))
       throw new Error(eh + 'illegal tool');
     if (this.tools[toolObj.name]) throw new Error(eh + 'tool name repeat: ' + toolObj.name);
     this.#view.innerHTML += toolObj.tool;
@@ -170,7 +172,7 @@ class tbkView {
     this.#count++;
     var view = this.#view;
 
-    if (toolObj instanceof tbkGroup) {
+    if (toolObj instanceof Group) {
       if (click) toolObj.tools[toolObj.name].click = click;
       let trigger = (this.tools[toolObj.name].pop = new aniTemporaryPop(toolObj.pop, { preserve: true, position: { x: 2, y: 2 }, appendTo: toolObj.pop.firstChild, popupStyle: 'border-radius: 10px;' }, null, () => {
         // 背后的高亮消失
@@ -190,39 +192,34 @@ class tbkView {
   }
 };
 
-class tbkTool {
-  #color; #name; #tool; #empty_mask; #isOn = false;
+export class Tool extends GlassTheme {
+  #empty_mask; #isOn = false;
   get width() { return 40; };
-  get name() { return this.#name; };
-  get tool() { return this.#tool; };
-  get color() { return this.#color; };
   get isOn() { return this.#isOn; };
 
   // name icon [attach color shadow title]
-  constructor(obj) {
+  constructor({name, icon, atatch, title} = {}) {
+    super(name, 'gt-tool-');
     var ehh = eh + 'When creating Tool: ';
-    if (!obj || typeof obj != 'object') throw new Error(ehh + 'Illegal parameter.');
-    if (!obj.name || typeof obj.name != 'string') throw new Error(ehh + 'Illegal name.');
-    if (!obj.icon || typeof obj.icon != 'string' || !res[obj.icon]) throw new Error(ehh + 'Illegal icon.');
-    if (obj.attach && (typeof obj.attach != 'string' || !res[obj.attach])) throw new Error(ehh + 'Illegal attachment icon');
+    if (!icon || typeof icon != 'string' || !res[icon]) throw new Error(ehh + 'Illegal icon.');
+    if (attach && (typeof attach != 'string' || !res[attach])) throw new Error(ehh + 'Illegal attachment icon');
 
-    var color = obj.color || '-halfR';
+    var color = color || '-halfR';
     if (color[0] == '-') {
       color = `var(-${color})`;
     }
-    var tool = `<div id="tool-${obj.name}" style="--ccc: ${color}" class="gt-tool"`;
-    if (obj.title) tool += ` title="${obj.title}"`;
+    var tool = `<div id="tool-${name}" style="--ccc: ${color}" class="gt-tool"`;
+    if (title) tool += ` title="${title}"`;
     tool += ' tabindex="0" role="button">';
-    if (obj.shadow)
+    if (shadow)
       tool += '<div style="drop-shadow(0 0 1px var(--fullR))">';
-    this.#empty_mask = `width: ${res[obj.icon].w}px; height: ${res[obj.icon].h}px; position: absolute;`;
-    tool += '<div id="tool-m-' + obj.name + '" style="' + ((obj.attach && res[obj.attach].mask) ? cssMask(obj.attach) : this.#empty_mask) + `"><div id="tool-a-${obj.name}" style="${cssImage(obj.icon)}" class="gt-icon"></div></div><div id="tool-b-${obj.name}"`;
-    if (obj.attach) tool += ` style="${cssImage(obj.attach)}"`;
+    this.#empty_mask = `width: ${res[icon].w}px; height: ${res[icon].h}px; position: absolute;`;
+    tool += '<div id="tool-m-' + name + '" style="' + ((attach && res[attach].mask) ? cssMask(attach) : this.#empty_mask) + `"><div id="tool-a-${name}" style="${cssImage(icon)}" class="gt-icon"></div></div><div id="tool-b-${name}"`;
+    if (attach) tool += ` style="${cssImage(attach)}"`;
     tool += ' class="gt-icon"></div></div>';
-    if (obj.shadow) tool += '</div>';
+    if (shadow) tool += '</div>';
 
     this.#color = color;
-    this.#name = obj.name;
     this.#tool = tool;
   }
   turnOn() {
@@ -245,7 +242,7 @@ class tbkTool {
 };
 
 var tbk_group_cnt = 0;
-class tbkGroup {
+export class Group extends GlassTheme {
   tools = {};
   id;
   #tool = '<div class="gt-tool-group" tabindex="0" id="gt-tgroup-';
@@ -262,7 +259,7 @@ class tbkGroup {
   get name() { return this.#name; };
 
   constructor(firstTool) {
-    if (!(firstTool instanceof tbkTool)) throw new Error(eh + "please use Tool to create Group");
+    if (!(firstTool instanceof Tool)) throw new Error(eh + "please use Tool to create Group");
     this.tools[firstTool.name] = { tool: firstTool };
     this.#tool += `${++tbk_group_cnt}">${firstTool.tool}</div>`;
     this.id = tbk_group_cnt;
@@ -280,16 +277,9 @@ class tbkGroup {
   }
 
   append(tool, click) {
-    if (!(tool instanceof tbkTool)) throw new Error(eh + "please append Tool to Group");
+    if (!(tool instanceof Tool)) throw new Error(eh + "please append Tool to Group");
     this.tools[tool.name] = { tool: tool, click: click };
     this.#pop.innerHTML += tool.tool;
     this.#count++;
   }
 }
-
-gt.toolbar = {
-  Bar: tbkBar,
-  View: tbkView,
-  Tool: tbkTool,
-  Group: tbkGroup,
-};

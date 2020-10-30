@@ -6,7 +6,7 @@ window.console.log = function (message) {
     message = message.toString();
   con.innerText += message + '\n';
 }*/
-$(function () {
+gt(function () {
   /*$.getJSON('icons.json', function (data) {
     var map = new gt.iconKit.IconMap('icons.png', data);
     var Tool = gt.toolbarKit.BtnTool;
@@ -45,7 +45,8 @@ $(function () {
   gt.setMainElement(document.getElementById("main"));
   Promise.all([gt.loadSpriteMap('icons.json', 'icons.png', 'icons2x.png')]).then(function () {
     const Tool = gt.toolbar.Tool, View = gt.toolbar.View, Bar = gt.toolbar.Bar, Group = gt.toolbar.Group;
-    const Text = gt.Widget.Text, InputBox = gt.Widget.InputBox, Button = gt.Widget.Button;
+    const Text = gt.Widget.Text, InputBox = gt.Widget.InputBox, Button = gt.Widget.Button, WidgetGroup = gt.Widget.Group;
+    var FormBlock = gt.Form.FormBlock, RatioGroup = gt.Form.RatioGroup;
 
     var isPlay = false;
     var b1 = new View('progMain');
@@ -146,10 +147,36 @@ $(function () {
     var b5 = new View('searchBar');
 
     $('#code_tools').append(a2.bar).append(a1.bar).append(a3.bar);
-    var e1 = new Button('e1e1', 'test').color('red');
-    setTimeout(() => {
-      e1.value('succ').color('green').size('large');
-    }, 1000);
-    $('#widget-test').gtRender(e1);
+    var e1 = new Button('e1e1', 'fetch origin');
+    e1.color('primary').width(100).click(() => {
+      e1.disable(true).value('fetching...');
+      setTimeout(() => {
+        e1.value('succ').color('green').size('large').width(80).disable(false);
+      }, 1000);
+    });
+
+    var e2 = new InputBox('inputtext');
+    var f1 = new FormBlock('inputtext');
+    f1.color('blue');
+    e2.on('change', () => {
+      if (e2.value() == 'emmm')
+        f1.warn('emmmm');
+    });
+
+    var f2 = new RatioGroup('radio1');
+    f2.append({prefix: '<label>Select1</label>', suffix: '<br>', value: 'a1'});
+    f2.append({prefix: '<label>Select2</label>', suffix: '<br>', value: 'a2'});
+    f2.append({prefix: '<label>Select3</label>', suffix: '<br>', value: 'a3'});
+    f2.update();
+
+    var e3 = new Button('group-btn1', 'btn1');
+    var e4 = new Button('group-btn2', 'btn2');
+    var e5 = new Button('group-btn3', 'btn3');
+    e3.color('red');
+    e4.color('green');
+    e5.size('large');
+    var e6 = new WidgetGroup('large');
+    e6.append(e3).append(e4).append(e5);
+    $('#widget-test').gtRender([e1, f2, e6]);
   });
 });

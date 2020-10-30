@@ -46,21 +46,22 @@
   --bgC: var(--secB);
   --fgC: var(--fullR);
   background-color: var(--bgC);
-  border: 2px transparent solid;
+  border: 1px transparent solid;
   color: var(--fgC);
   cursor: pointer;
   transition: all .2s ease-out;
 }
 .gt-btn:focus,
-.gt-input[type="button"]:focus,
-.gt-input[type="checkbox"]:focus {
+.gt-input:focus {
   border-color: var(--fullR) !important;
-  transform: scale(.95);
+}
+.gt-btn:focus:hover,
+.gt-input:focus:hover {
+  filter: brightness(1);
 }
 .gt-btn:disabled,
 .gt-input:disabled {
-  filter: opacity(.5);
-  --fgC: gray;
+  filter: opacity(.5) grayscale(1);
   cursor: not-allowed;
 }
 /* 单行输入框控件 */
@@ -75,7 +76,7 @@
 }
 /* 多选框控件 */
 .gt-input[type="checkbox"],
-.gt-input[type="ratio"] {
+.gt-input[type="radio"] {
   appearance: none;
   border: 1px var(--secB) solid;
   background-color: var(--secB);
@@ -84,24 +85,81 @@
   cursor: pointer;
   padding: 0;
 }
-.gt-iput[type="checkbox"] {
+.gt-input[type="checkbox"] {
   border-radius: 5px;
 }
-.gt-iput[type="ratio"] {
+.gt-input[type="radio"] {
   border-radius: 8px;
 }
-.gt-input[type="checkbox"]:checked {
-  background-color: var(--blue);
-  border-color: transparent;
+.gt-input[type="checkbox"]:checked,
+.gt-input[type="radio"]:checked {
+  --bgC: var(--blue);
+  background-color: var(--bgC);
+  border-color: transparent !important;
 }
 .gt-input[type="checkbox"]::before {
-  content: "";
   width: 16px;
   height: 16px;
-  display: block;
   margin: -1px;
-}
-.gt-input[type="checkbox"]:checked::before {
   -webkit-mask-image: url('data:image/svg+xml;utf8,%3C?xml%20version=%221.0%22%20encoding=%22UTF-8%22%20standalone=%22no%22?%3E%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20xml:space=%22preserve%22%20version=%221.1%22%20viewBox=%220%200%2016%2016%22%3E%3Cpath%20stroke=%22black%22%20stroke-width=%222%22%20d=%22M3.20829+8.79045L6.69632+12.1959L13.006+4.95793%22%20fill=%22none%22%20stroke-linecap=%22round%22%20opacity=%221%22%20stroke-linejoin=%22round%22/%3E%3C/svg%3E');
-  background-color: var(--fullR);
+}
+.gt-input[type="radio"]::before {
+  width: 10px;
+  height: 10px;
+  margin: 2px;
+  border-radius: 5px;
+}
+.gt-input[type="checkbox"]::before,
+.gt-input[type="radio"]::before {
+  content: "";
+  display: block;
+  background-color: #EEE;
+  transform: scale(.2);
+  filter: opacity(0);
+  transition-property: transform, filter;
+  transition-duration: .2s;
+  transition-timing-function: ease-out;
+}
+.gt-input[type="checkbox"]:checked::before,
+.gt-input[type="radio"]:checked::before {
+  transform: scale(1);
+  filter: opacity(1);
+}
+
+.gtw-group {
+  display: flex;
+}
+.gtw-group > * {
+  border-radius: 0;
+  display: block;
+}
+.gtw-group.gt-grow > * {
+  flex-grow: 1;
+}
+.gtw-group > *:nth-child(1) {
+  border-radius: 8px 0 0 8px;
+}
+.gtw-group > *:nth-last-child(1) {
+  border-radius: 0 8px 8px 0;
+}
+.gtw-group.gt-sm > *:nth-child(1) {
+  border-radius: 10px 0 0 10px;
+}
+.gtw-group.gt-sm > *:nth-last-child(1) {
+  border-radius: 0 10px 10px 0;
+}
+.gtw-group.gt-vect {
+  flex-direction: column;
+}
+.gtw-group.gt-vect > *:nth-child(1) {
+  border-radius: 8px 8px 0 0;
+}
+.gtw-group.gt-vect > *:nth-last-child(1) {
+  border-radius: 0 0 8px 8px;
+}
+.gtw-group.gt-vect.gt-sm > *:nth-child(1) {
+  border-radius: 10px 10px 0 0;
+}
+.gtw-group.gt-vect.gt-sm > *:nth-last-child(1) {
+  border-radius: 0 0 10px 10px;
 }

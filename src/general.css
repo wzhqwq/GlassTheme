@@ -5,14 +5,14 @@
   --secC: #444;
   --priB: #333D;
   --secB: #444A;
-  --fullR: #DDD;
+  --fullR: #CCC;
   --halfR: #AAA;
-  --green: #0C3;
-  --blue: #08F;
-  --orange: #F90;
-  --red: #D00;
+  --green: #3B1;
+  --blue: #18D;
+  --orange: #E82;
+  --red: #E22;
   --brown: #720;
-  --hover: 1.3;
+  --hover: 1.2;
 }
 .gtc-light {
   --bgC: #FAFAFA !important;
@@ -22,10 +22,10 @@
   --secB: #DDDA;
   --fullR: #333;
   --halfR: #666;
-  --green: #3B0;
-  --blue: #27F;
+  --green: #3C0;
+  --blue: #09F;
   --orange: #F83;
-  --red: #F22;
+  --red: #F11;
   --brown: #910;
   --hover: .9;
 }

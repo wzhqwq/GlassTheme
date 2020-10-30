@@ -2,6 +2,12 @@
 
 Design elements library inspired from iOS 13.
 
+**This project has been achieved(thrown away).**
+
+It's my pleasure that this project is more powerful than I thought a year ago.
+Successful projects like Vue.js and react have built enough powerful Component System, Renderer System, Data Binding and so on. So there's no need to finish their works again with my poor web technologies and useless perspectives.
+I learned many web technologies during development. It's time to accept Vue.js and develop [FocusOI](https://github.com/wzhqwq/Focus-OI).
+
 # Usage
 
 ## Color System
